@@ -76,6 +76,10 @@
 (defn get-name [ who-key name-def-hash-map ]
   (:name (who-key name-def-hash-map)))
 
+(defn items-bought-by [ who-key name-def-has-map ]
+  (map #(get-name % name-def-has-map)
+       (list-of-items-bought-by who-key)))
+
 (defn values-of [ name-def-hash-map a-hash-map func-name func ]
   (map #( str func-name" "
               (get-name % name-def-hash-map)
@@ -84,13 +88,14 @@
               "\n")
        (keys name-def-hash-map)))
 
-(defn items-bought-by [ who-key name-def-has-map ]
-  (map #(get-name % name-def-has-map)
-       (list-of-items-bought-by who-key)))
+;; use func as a func-name in the function values-of
+(defmacro m-values-of [ name-def-hash-map a-hash-map func ]
+  `(let [func# ~func]
+     (values-of ~name-def-hash-map ~a-hash-map '~func func#)))
 
-(print (values-of persons persons     "cash-to-give-by" cash-to-give-by))
-(print (values-of persons given-items "items-bought-by" items-bought-by))
-(print (values-of persons persons     "total-price-of-items-bought-by" total-price-of-items-bought-by))
+(print (m-values-of persons persons     cash-to-give-by))
+(print (m-values-of persons given-items items-bought-by))
+(print (m-values-of persons persons     total-price-of-items-bought-by))
 
 (def divisible-share-per-person 
   (/ (- total-price-given-items total-fixed-cash) cnt-persons-divisible-cash))
@@ -104,7 +109,7 @@
           (:given-cash (who-key name-def-hash-map))))
     0))
 
-(print (values-of persons persons "divisible-share-of" divisible-share-of))
+(print (m-values-of persons persons divisible-share-of))
 
 ;; Separation of concerns:
 ;; Do not make the calculation of payment-amount and payment-direction
