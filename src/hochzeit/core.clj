@@ -1,33 +1,33 @@
 (ns hochzeit.core)
 
-(def given-items 
-  (hash-map
-    :vases         (hash-map :price 135.0 :name "Vasen")
-    :flowers       (hash-map :price 15.0  :name "Blumen")
-    :greeting-card (hash-map :price 2.75  :name "Hochszeitskarte")
-    :cash          (hash-map :price 100.0 :name "Bargeld")))
+;{}  hash-map
+;#{} set, hash-set
+;()  list
+;[]  vector
 
-(def persons
-  (hash-map :bost         (hash-map :name "Bost"        
-                                    :given-cash 0.0
-                                    :fixed-cash 0.0
-                                    :bought-items '( :vases
-                                                   :flowers
-                                                   :greeting-card))
-            :michael      (hash-map :name "Michael"     
-                                    :given-cash 50.0
-                                    :fixed-cash 0.0
-                                    :bought-items '())
-            :andreas      (hash-map :name "Andreas"     
-                                    :given-cash 50.0
-                                    :fixed-cash 0.0
-                                    :bought-item'())
-            :rosa-carsten (hash-map :name "RosaCarsten" 
-                                    :given-cash 0.0
-                                    :fixed-cash 20.0
-                                    :bought-items '())))
+(def given-items {:vases         {:price 135.0 :name "Vasen" }
+                  :flowers       {:price 15.0  :name "Blumen" }
+                  :greeting-card {:price 2.75  :name "Hochszeitskarte" }
+                  :cash          {:price 100.0 :name "Bargeld" }})
 
-(defn list-of [ a-key name-defs ] 
+(def persons {:bost         {:name "Bost"
+                             :given-cash 0.0
+                             :fixed-cash 0.0
+                             :bought-items '( :vases :flowers :greeting-card)}
+              :michael      {:name "Michael"
+                             :given-cash 50.0
+                             :fixed-cash 0.0
+                             :bought-items '()}
+              :andreas      {:name "Andreas"
+                             :given-cash 50.0
+                             :fixed-cash 0.0
+                             :bought-item'()}
+              :rosa-carsten {:name "RosaCarsten"
+                             :given-cash 0.0
+                             :fixed-cash 20.0
+                             :bought-items '()}})
+
+(defn list-of [ a-key name-defs ]
   (map #(a-key %) (vals name-defs)))
 
 (println "list-of names:"       (list-of :name persons))
@@ -36,9 +36,9 @@
 ; TODO how to concatenate lists?
 (println "list-of bought-items" (concat (list-of :bought-items persons)))
 (println "list-of given-items"  (list-of :name given-items))
-         
 
-(defn total [ cash-key name-defs ] 
+
+(defn total [ cash-key name-defs ]
   (reduce + (list-of cash-key name-defs)))
 
 (def total-price-given-items (total :price given-items))
@@ -98,7 +98,7 @@
 (print (m-values-of persons given-items items-bought-by))
 (print (m-values-of persons persons     total-price-of-items-bought-by))
 
-(def divisible-share-per-person 
+(def divisible-share-per-person
   (/ (- total-price-given-items total-fixed-cash) cnt-persons-divisible-cash))
 
 (println "divisible-share-per-person:" divisible-share-per-person)
@@ -126,7 +126,7 @@
     (if (< share 0)
       (* share -1)  ; just inver the negative number
       (if (zero? share)
-        (:fixed-cash (who-key name-defs)) 
+        (:fixed-cash (who-key name-defs))
         share))))
 
 (defn payment [ who-key name-defs]
