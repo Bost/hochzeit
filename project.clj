@@ -3,6 +3,10 @@
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  ;; clojure 1.5.0 does not work in vimclojure
-  ;:dependencies [[org.clojure/clojure "1.5.0"]])
-  :dependencies [[org.clojure/clojure "1.4.0"]])
+  :dependencies [
+                 [org.clojure/clojure "1.5.1"]
+                 [clojurewerkz/money "1.1.0"]
+                 ]         
+  :source-paths      ["src/clojure"]
+  :resource-paths    ["src/resources"])
+
