@@ -4,7 +4,30 @@ A Clojure library designed to ... well, that part is up to you.
 
 ## Usage
 
-FIXME
+```
+crontab -e
+```
+
+```
+# Run every 5 minutes
+*/5 * * * * java -cp ~/hochzeit-0.1.0-SNAPSHOT-standalone.jar hochzeit.load ~/vircurex/ https://vircurex.com/api/get_info_for_currency.xml
+```
+
+```
+mvn install:install-file -DgroupId=org.joda \
+-DartifactId=joda-money \
+-Dversion=0.8.1 \
+-Dfile=~/git/joda-money/target/joda-money-0.8.1-SNAPSHOT.jar \
+-Dpackaging=jar \
+-DgeneratePom=true
+
+mvn install:install-file -DgroupId=clojurewerkz \
+-DartifactId=money \
+-Dversion=1.2.0 \
+-Dfile=~/dev/money/target/money-1.2.0-SNAPSHOT-standalone.jar \
+-Dpackaging=jar \
+-DgeneratePom=true
+```
 
 ## License
 
