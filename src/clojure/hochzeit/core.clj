@@ -1,5 +1,9 @@
 (ns hochzeit.core)
 
+(def custom-formatter
+        (tf/formatter "yyyy-MM-dd_hh-mm-ss"))
+
+(comment
 ;{}  hash-map
 ;#{} set, hash-set
 ;()  list
@@ -136,3 +140,4 @@
        "\n"))
 
 (println (map #(payment % persons) (keys persons)))
+)

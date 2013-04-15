@@ -1,3 +1,4 @@
+;(ns hochzeit.load)
 (ns hochzeit.load 
   ;(:use 
         ;[clojure.xml]
@@ -18,7 +19,7 @@
   (:gen-class)
   )
 
-(defn -main [ save-dir src-uri ]
+(defn -main [ save-dir src-uri custom-formatter ]
   (let [
         http-resp
         (client/get src-uri
@@ -26,10 +27,6 @@
 
         resp-headers
         (into {} (for [[k v] (:headers http-resp)] [(keyword k) (str v)]))
-
-
-        custom-formatter
-        (tf/formatter "yyyy-MM-dd_hh-mm-ss")
 
         ; This might not be needed. I could parse the date usind clj-time
         resp-date 
@@ -48,7 +45,7 @@
     )
   )
   
-(def saveDir "/home/bost/vircurex/")
+;(def saveDir "/home/bost/vircurex/")
 (def srcUri "https://vircurex.com/api/get_info_for_currency.xml")
 ;(def srcUri "http://google.com")
 
