@@ -18,7 +18,11 @@
   (:gen-class)
   )
 
-(def save-dir "/home/bost/vircurex/")
+(def os-name (System/getProperty "os.name"))
+(def save-dir (if (= os-name "Windows 7")
+                (str "c:\\cygwin\\home\\" (System/getProperty "user.name") "\\vircurex\\")
+                (str (System/getProperty "user.home")"/vircurex/")))
+
 (def directory (clojure.java.io/file save-dir))
 (def files (file-seq directory))
 (def subset-files (take 2 files))
