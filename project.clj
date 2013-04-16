@@ -22,6 +22,6 @@
   :source-paths      ["src/clojure"]
   :resource-paths    ["src/resources"]
 
-  :main hochzeit.load
+  :main hochzeit.download
   )
 
