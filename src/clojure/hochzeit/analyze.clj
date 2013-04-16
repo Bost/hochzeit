@@ -13,32 +13,24 @@
             [liberator.util :only [parse-http-date http-date] :as du])
   (:gen-class))
 
-(defn get-val [ loc p0 p1 p2 text & preds ]
-  "Extract value using predicates"
-  "TODO check how to make it work with variable count of args"
-  (first
-    (xml-> loc p0 p1 p2 text)))
 
-;(defn format-val [ value p0 p1 p2 & preds ]
-  ;"Format value with predicates to a readable string"
-  ;"TODO check how to make it work with variable count of args"
-  ;(str p0 " " p1 " " p2 " : " value))
-
-(defn get-key [path]
-  (keyword path))
-
-(defn do-analyze [ files s0 s1 s2 & other-selectors ]
-  "TODO check how to make it work with variable count of args"
+(defn do-parse [ files ]
   ; for builds a lazy seq; doseq is for executing side-effects and returns nil
   (for [file files]
-    ;(get-kv-pair file)
-  (let [path (.getPath file)]
-    (if (not (.isDirectory file))
-      (let [ p (xml/parse path)
-            zipped (zip/xml-zip p) ]
-        [ (get-key path) (get-val zipped s0 s1 s2 text)]
-        )))))
+    (let [path (.getPath file)]
+      (if (not (.isDirectory file))
+        (zip/xml-zip (xml/parse path))))))
 
+(defn t [file]
+  (for [x (xml-seq
+            (xml/parse file))
+        :when (= :hash (:tag x))]
+    (first (:content x))))
+
+;(for [x (xml-seq
+          ;(parse (java.io.File. file)))
+             ;:when (= :b (:tag x))]
+     ;(first (:content x)))
 ;(comment
   ;(def fname "vircurex.2013-04-15_12-55-09.xml")
   ;(def f (str save-dir fname))

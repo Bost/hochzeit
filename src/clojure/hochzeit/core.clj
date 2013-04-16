@@ -25,10 +25,10 @@
 (def files (take 3
                  (file-seq directory)))
 
-(def result (analyze/do-analyze files :BTC :EUR :lowest-ask))
+;(def result (analyze/do-analyze files :BTC :EUR :lowest-ask))
+;(def result (analyze/do-parse files))
+(def f "/tmp/vircurex/vircurex.2013-04-15_08-33-38")
+(def result (analyze/t (str f ".xml")))
+
 (println "result:\n" result)
-
-
-(comment
-;/tmp/vircurex
-         )
+(spit (str f ".json") (first result))
