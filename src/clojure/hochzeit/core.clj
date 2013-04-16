@@ -6,9 +6,6 @@
 
 (def src-uri "https://vircurex.com/api/get_info_for_currency.xml")
 
-(def save-dir "/tmp/vircurex/")
-; TODO Read System.properties to get $HOME
-
 (def os-name (System/getProperty "os.name"))
 (def save-dir (if (= os-name "Windows 7")
                 (str "c:\\cygwin\\home\\" (System/getProperty "user.name") "\\vircurex\\")
@@ -31,8 +28,9 @@
 
 ;(def result (analyze/do-analyze files :BTC :EUR :lowest-ask))
 ;(def result (analyze/do-parse files))
-(def f "/tmp/vircurex/vircurex.2013-04-15_08-33-38")
+(def f (str "./vircurex.2013-04-15_11-48-00"))
 (def result (analyze/t (str f ".xml")))
 
-(println "result:\n" result)
+(println "1st result:\n" (first result))
+(println "2nd result:\n" (second result))
 (spit (str f ".json") (first result))

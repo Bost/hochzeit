@@ -25,7 +25,7 @@
   (for [x (xml-seq
             (xml/parse file))
         :when (= :hash (:tag x))]
-    (first (:content x))))
+    (:content x)))
 
 ;(for [x (xml-seq
           ;(parse (java.io.File. file)))

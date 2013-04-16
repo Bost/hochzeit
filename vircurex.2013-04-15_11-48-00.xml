@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hash>
+  <BTC>
+    <AAA>
+      <lowest-ask type="decimal">0.0</lowest-ask>
+      <highest-bid type="decimal">0.0</highest-bid>
+      <last-trade type="decimal">0.0</last-trade>
+      <volume type="decimal">0.0</volume>
+    </AAA>
+    <DVC>
+      <lowest-ask type="decimal">787401.57480315</lowest-ask>
+      <highest-bid type="decimal">641025.64102564</highest-bid>
+      <last-trade type="decimal">787401.57480314</last-trade>
+      <volume type="decimal">13.10446095</volume>
+    </DVC>
+    <EUR>
+      <lowest-ask type="decimal">85.0</lowest-ask>
+      <highest-bid type="decimal">71.0</highest-bid>
+      <last-trade type="decimal">75.0</last-trade>
+      <volume type="decimal">1.23987936</volume>
+    </EUR>
+  </BTC>
+  <CHF>
+    <BTC>
+      <lowest-ask type="decimal">0.0</lowest-ask>
+      <highest-bid type="decimal">0.0</highest-bid>
+      <last-trade type="decimal">0.0</last-trade>
+      <volume type="decimal">0.0</volume>
+    </BTC>
+    <DVC>
+      <lowest-ask type="decimal">0.0</lowest-ask>
+      <highest-bid type="decimal">0.0</highest-bid>
+      <last-trade type="decimal">0.0</last-trade>
+      <volume type="decimal">0.0</volume>
+    </DVC>
+  </CHF>
+</hash>
