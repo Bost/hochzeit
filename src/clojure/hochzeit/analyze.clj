@@ -21,6 +21,8 @@
       (if (not (.isDirectory file))
         (zip/xml-zip (xml/parse path))))))
 
+; TODO see https://github.com/nathell/clj-tagsoup
+; TODO see https://github.com/cgrand/enlive
 (defn t [file]
   (for [x (xml-seq
             (xml/parse file))
