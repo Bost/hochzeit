@@ -2,7 +2,9 @@
   (:use [hochzeit.download :as download]
         [hochzeit.analyze :as analyze]
         [pl.danieljanus.tagsoup :as ts]
-        [clojure.data.zip.xml :only [attr text xml->] ]
+        [clojure.data.zip.xml 
+         ;s:only [attr text xml->] 
+         ]
         )
   (:require
     [clj-time.format :as tf]
@@ -70,14 +72,40 @@
 
 (def highest-bids (hash-map-of-kv-pairs first-node :highest-bid))
 ;(prn highest-bids)
-(lazy-val :BTC-EUR highest-bids)
+;(lazy-val :BTC-EUR highest-bids)
 
 (def zipped
   (zip/xml-zip
     (xml/parse fname-xml)))
-(first (xml-> zipped :BTC :EUR :highest-bid text))
+(xml1-> zipped :BTC :EUR :highest-bid text) ; (first (xml-> ...))
 ;(first (xml-> zipped :BTC :EUR :last-trade (attr :type)))
-(first (xml-> zipped :BTC :EUR :last-trade text))
+(xml1-> zipped :BTC :EUR :last-trade text)
+
+(defn currencies []
+  (into [] (cons :BTC
+        (for [c (:content (first (:content (first (xml1-> zipped)))))] 
+          (:tag c)))))
+
+(defn combine [v]
+  "Create cartesian product of vector v with vector v withouth the diagonal elements"
+  (into [] (for [x (v)
+                 y (v)
+                 :when (not (= x y))]
+             [x y])))
+
+(combine currencies)
+
+;(
+ ;([:BTC :BTC] [:BTC :AAA] [:BTC :DVC] [:BTC :EUR])
+ ;([:AAA :BTC] [:AAA :AAA] [:AAA :DVC] [:AAA :EUR])
+ ;([:DVC :BTC] [:DVC :AAA] [:DVC :DVC] [:DVC :EUR])
+ ;([:EUR :BTC] [:EUR :AAA] [:EUR :DVC] [:EUR :EUR])
+;)
+
+;(def c (currencies))
+;(prn c)
+;(prn c c)
+;(apply #(apply prn c) prn c)
 
 ;[:hash {}
  ;[:BTC {}
