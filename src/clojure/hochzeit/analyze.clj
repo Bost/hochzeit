@@ -24,11 +24,6 @@
 ; TODO see https://github.com/nathell/clj-tagsoup
 ; TODO see https://github.com/cgrand/enlive
 ; TODO Schejulure
-(defn t [file]
-  (for [x (xml-seq
-            (xml/parse file))
-        :when (= :hash (:tag x))]
-    (:content x)))
 
 ;(for [x (xml-seq
           ;(parse (java.io.File. file)))
