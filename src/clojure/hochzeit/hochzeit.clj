@@ -1,10 +1,5 @@
 (ns hochzeit.hochzeit)
 
-;{}  hash-map
-;#{} set, hash-set
-;()  list
-;[]  vector
-
 (def given-items {:vases         {:price 135.0 :name "Vasen" }
                   :flowers       {:price 15.0  :name "Blumen" }
                   :greeting-card {:price 2.75  :name "Hochszeitskarte" }

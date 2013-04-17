@@ -18,6 +18,9 @@
                  [clj-http "0.7.1"]
                  [org.clojure/data.json "0.2.2"]
                  [org.clojure/data.zip "0.1.1"]
+
+                 [clj-tagsoup "0.3.0" ;:exclusions [net.java.dev.stax-utils/stax-utils]
+                  ]
                  ]
   :source-paths      ["src/clojure"]
   :resource-paths    ["src/resources"]
