@@ -1,16 +1,11 @@
 (ns hochzeit.core
   (:use [hochzeit.download :as download]
-        [hochzeit.analyze :as analyze]
-        [pl.danieljanus.tagsoup :as ts]
-        [clojure.data.zip.xml 
-         ;s:only [attr text xml->] 
-         ]
-        )
+        [hochzeit.analyze :as analyze])
   (:require
     [clj-time.format :as tf]
     [clojure.zip :as zip]
     [clojure.xml :as xml]
-            ))
+    ))
 
 (def src-uri "https://vircurex.com/api/get_info_for_currency.xml")
 
@@ -38,62 +33,12 @@
 (def fname-xml (str fname-base ".xml"))
 
 ;(ts/parse "http://example.com")
-(def first-node (ts/parse fname-xml))
 
-(defn val-of-children-of [node tag-name]
-  "Get value of the child-nodes of node for given tag-name"
-  (for [child-node (children node)
-        :when (= (tag child-node) tag-name) ]
-    (children child-node)))  ;(first (children child-node))) ;use it to get 'inside' of lazy-seq
-
-(defn key-of [node0 node1]
-  "Create :nameNode0-nameNode1"
-  (keyword (str (name (tag node0))
-                "-"
-                (name (tag node1)))))
-
-(defn kv-pair-of [node tag-name]
-  "key value pairs: {:nameNode-nameChild0 tagValChild0}"
-  "               , {:nameNode-nameChild1 tagValChild1}"
-  "               , ..."
-  (for [child-node (children node)]
-    { (key-of node child-node)
-      (val-of-children-of child-node tag-name)}))
-
-(defn hash-map-of-kv-pairs [node tag-name]
-  (into {}
-        (for [child-node (children node)]
-          (into {} (kv-pair-of child-node tag-name)))))
-
-(defn lazy-val [k hm]
-  (first
-    (first
-      (k hm))))
-
-(def highest-bids (hash-map-of-kv-pairs first-node :highest-bid))
-;(prn highest-bids)
-;(lazy-val :BTC-EUR highest-bids)
-
-(def zipped
-  (zip/xml-zip
-    (xml/parse fname-xml)))
-(xml1-> zipped :BTC :EUR :highest-bid text) ; (first (xml-> ...))
+;(xml1-> zipped :BTC :EUR :highest-bid text) ; (first (xml-> ...))
 ;(first (xml-> zipped :BTC :EUR :last-trade (attr :type)))
-(xml1-> zipped :BTC :EUR :last-trade text)
+;(xml1-> zipped :BTC :EUR :last-trade text)
 
-(defn currencies []
-  (into [] (cons :BTC
-        (for [c (:content (first (:content (first (xml1-> zipped)))))] 
-          (:tag c)))))
-
-(defn combine [v]
-  "Create cartesian product of vector v with vector v withouth the diagonal elements"
-  (into [] (for [x (v)
-                 y (v)
-                 :when (not (= x y))]
-             [x y])))
-
-(combine currencies)
+(analyze/combine (analyze/currencies fname-xml))
 
 ;(
  ;([:BTC :BTC] [:BTC :AAA] [:BTC :DVC] [:BTC :EUR])
@@ -101,11 +46,6 @@
  ;([:DVC :BTC] [:DVC :AAA] [:DVC :DVC] [:DVC :EUR])
  ;([:EUR :BTC] [:EUR :AAA] [:EUR :DVC] [:EUR :EUR])
 ;)
-
-;(def c (currencies))
-;(prn c)
-;(prn c c)
-;(apply #(apply prn c) prn c)
 
 ;[:hash {}
  ;[:BTC {}
@@ -136,3 +76,38 @@
   ;]
  ;]
 
+;(def first-node (ts/parse fname-xml))
+
+;(defn val-of-children-of [node tag-name]
+  ;"Get value of the child-nodes of node for given tag-name"
+  ;(for [child-node (children node)
+        ;:when (= (tag child-node) tag-name) ]
+    ;(children child-node)))  ;(first (children child-node))) ;use it to get 'inside' of lazy-seq
+
+;(defn key-of [node0 node1]
+  ;"Create :nameNode0-nameNode1"
+  ;(keyword (str (name (tag node0))
+                ;"-"
+                ;(name (tag node1)))))
+
+;(defn kv-pair-of [node tag-name]
+  ;"key value pairs: {:nameNode-nameChild0 tagValChild0}"
+  ;"               , {:nameNode-nameChild1 tagValChild1}"
+  ;"               , ..."
+  ;(for [child-node (children node)]
+    ;{ (key-of node child-node)
+      ;(val-of-children-of child-node tag-name)}))
+
+;(defn hash-map-of-kv-pairs [node tag-name]
+  ;(into {}
+        ;(for [child-node (children node)]
+          ;(into {} (kv-pair-of child-node tag-name)))))
+
+;(defn lazy-val [k hm]
+  ;(first
+    ;(first
+      ;(k hm))))
+
+;(def highest-bids (hash-map-of-kv-pairs first-node :highest-bid))
+;;(prn highest-bids)
+;;(lazy-val :BTC-EUR highest-bids)
