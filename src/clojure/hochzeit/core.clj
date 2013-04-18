@@ -29,8 +29,9 @@
 (def files (take 3
                  (file-seq directory)))
 
-(def fname-base (str "./vircurex.2013-04-15_11-48-00"))
-(def fname-xml (str fname-base ".xml"))
+;(def fname-base (str "./vircurex.2013-04-15_11-48-00"))
+;(def fname-xml (str fname-base ".xml"))
+;(analyze/combine (analyze/currencies fname-xml))
 
 ;(ts/parse "http://example.com")
 
@@ -38,7 +39,22 @@
 ;(first (xml-> zipped :BTC :EUR :last-trade (attr :type)))
 ;(xml1-> zipped :BTC :EUR :last-trade text)
 
-(analyze/combine (analyze/currencies fname-xml))
+(def vec-of-vectors (into [] (analyze/do-parse files)))
+;=> (prn vec-of-vectors)
+;[nil [:BTC :AAA :DVC :EUR] [:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD]]
+
+; Combine a set of collections into a single collection
+(def elems-of-vec-of-vectors
+  ;(for [sub-vec vec-of-vectors e sub-vec] e))  ; or alternatively use reduce-into:
+  (reduce into vec-of-vectors))
+
+(def all-currencies (into [] elems-of-vector-of-vectors))
+(prn all-currencies)
+
+;=> (= combine create-pairs)
+;true
+(analyze/combine all-currencies)
+
 
 ;(
  ;([:BTC :BTC] [:BTC :AAA] [:BTC :DVC] [:BTC :EUR])

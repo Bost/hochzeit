@@ -16,13 +16,6 @@
   (:gen-class))
 
 
-(defn do-parse [ files ]
-  ; for builds a lazy seq; doseq is for executing side-effects and returns nil
-  (for [file files]
-    (let [path (.getPath file)]
-      (if (not (.isDirectory file))
-        (zip/xml-zip (xml/parse path))))))
-
 (defn kids [fname-xml]
   "Children below the top most tag"
   (first (:content 
@@ -30,8 +23,8 @@
 
 (defn currencies [fname-xml]
   (into [] (cons (:tag (kids fname-xml))
-        (for [c (:content (kids fname-xml))] 
-          (:tag c)))))
+                 (for [c (:content (kids fname-xml))] 
+                   (:tag c)))))
 
 (defn combine [v]
   "Create cartesian product of vector v with vector v withouth the diagonal elements"
@@ -39,6 +32,13 @@
                  y v
                  :when (not (= x y))]
              [x y])))
+
+(defn do-parse [ files ]
+  ; for builds a lazy seq; doseq is for executing side-effects and returns nil
+  (for [file files]
+    (let [path (.getPath file)]
+      (if (not (.isDirectory file))
+        (currencies path)))))
 
 ; TODO see https://github.com/nathell/clj-tagsoup
 ; TODO see https://github.com/cgrand/enlive
