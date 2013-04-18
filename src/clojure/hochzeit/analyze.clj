@@ -33,12 +33,13 @@
                  :when (not (= x y))]
              [x y])))
 
-(defn do-parse [ files ]
+(defn do-parse [files func]
   ; for builds a lazy seq; doseq is for executing side-effects and returns nil
-  (for [file files]
-    (let [path (.getPath file)]
-      (if (not (.isDirectory file))
-        (currencies path)))))
+  (remove nil?
+          (for [file files]
+            (let [path (.getPath file)]
+              (if (not (.isDirectory file))
+                (func path))))))
 
 ; TODO see https://github.com/nathell/clj-tagsoup
 ; TODO see https://github.com/cgrand/enlive
