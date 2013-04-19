@@ -9,18 +9,12 @@
                  [liberator "0.8.0"]
 
                  [clj-time "0.5.0"]
-                 [org.apache.httpcomponents/httpcore "4.2.4"]
-                 [org.apache.httpcomponents/httpclient "4.2.3"]
-                 [org.apache.httpcomponents/httpmime "4.2.3"]
 
                  [org.clojure/clojure "1.5.1"]
                  [clojurewerkz/money "1.2.0"]
                  [clj-http "0.7.1"]
                  [org.clojure/data.json "0.2.2"]
                  [org.clojure/data.zip "0.1.1"]
-
-                 [clj-tagsoup "0.3.0" ;:exclusions [net.java.dev.stax-utils/stax-utils]
-                  ]
                  ]
   :source-paths      ["src/clojure"]
   :resource-paths    ["src/resources"]

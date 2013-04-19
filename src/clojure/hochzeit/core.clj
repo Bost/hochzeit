@@ -1,7 +1,9 @@
 (ns hochzeit.core
-  (:use [hochzeit.download :as download]
-        [clojure.data.zip.xml] ;s:only [attr text xml-> xml1->]
-        [hochzeit.analyze :as analyze])
+  (:use
+    [hochzeit.download :as download]
+    [clojure.data.zip.xml] ;s:only [attr text xml-> xml1->]
+    [hochzeit.analyze :as analyze]
+    )
   (:require
     [clj-time.format :as tf]
     [clojure.zip :as zip]
@@ -19,7 +21,6 @@
 (def base-name "vircurex")
 (def tstamp "2013/04/19")
 (def fname-format (tf/formatter "yyyy-MM-dd_hh-mm-ss"))
-(def ext "xml")
 
 (def directory (clojure.java.io/file (str save-dir tstamp)))
 (def files (take 7 (file-seq directory)))
@@ -31,14 +32,6 @@
 ;=> (analyze/currencies fname-xml)
 ;[:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD]
 
-;(ts/parse "http://example.com")
-
-;(def zipped (zip/xml-zip (xml/parse fname-xml)))
-;(xml1-> zipped :BTC :EUR :highest-bid text) ; (first (xml-> ...))
-;(first (xml-> zipped :BTC :EUR :last-trade (attr :type)))
-;(xml1-> zipped :BTC :EUR :last-trade text)
-
-
 ; get rid of duplicates
 (def hs-all-currencies (into #{} (reduce into (analyze/do-func analyze/currencies files))))
 (def all-currencies (into [] hs-all-currencies))
@@ -47,15 +40,14 @@
 
 ;=> (= combine create-pairs)
 ;true
-;(defn currency-pairs [] (analyze/combine all-currencies))
-(defn currency-pairs []
- [[:EUR :BTC] [:PPC :USD]])
-(println "currency-pairs:\n" (currency-pairs))
+(defn currency-pairs [] (analyze/combine all-currencies))
+;(defn currency-pairs []
+ ;[[:EUR :BTC] [:PPC :USD]])
+;=> (println "currency-pairs:\n" (currency-pairs))
 
 (defn get-vals [ zpp tag-0-1 tag-2 out-type]
   "get rid of the (if ...)'s to gain speed"
   (let [v (xml1-> zpp (first tag-0-1) (second tag-0-1) tag-2 text)]
-    ;(println v)
     (if (nil? v)
       nil
       (if (= out-type :headers)
@@ -64,27 +56,24 @@
 
 (defn fmt [x] (format "%16s" x))
 
-;(type (format "%16s" "aaa"))
-
 (defn get-zipped [fname-xml]
   (zip/xml-zip (xml/parse fname-xml)))
 
 (defn currency-pair-value-all-tstamps []
   (for [zpp (analyze/do-func get-zipped files)]
     (for [currency-pair (currency-pairs)]
-      ;(v zpp currency-pair)
       (get-vals zpp currency-pair :highest-bid :vals)
       )))
 
 ;(currency-pair-value-all-tstamps)
+(comment
 (dorun
   (map #(print (fmt %)) (into [""] (currency-pairs))))
 
 (doseq [currency-pair-value-tstamp (currency-pair-value-all-tstamps)]
   (println
     (dorun (map #(print (fmt %)) (into ["2013-04-19"] currency-pair-value-tstamp)))))
-
-
+)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;(

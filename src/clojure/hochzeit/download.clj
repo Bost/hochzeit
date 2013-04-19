@@ -1,15 +1,16 @@
 (ns hochzeit.download
-  (:require [clojure.xml :as xml]
-            [clojure.data.json :as json]
-            [clojure.zip :as zip]
-            [clj-http.client :as client]
-            [clj-http.cookies :as cookies]
-            [clj-time.core :as tcr]
-            [clj-time.format :as tf]
-            [clj-time.coerce :as tce]
-            [clojure.java.io :as io]
-            [liberator.util :only [parse-http-date http-date] :as du]
-            )
+  (:require
+    [clojure.xml :as xml]
+    [clojure.data.json :as json]
+    [clojure.zip :as zip]
+    [clj-http.client :as client]
+    [clj-http.cookies :as cookies]
+    [clj-time.core :as tcr]
+    [clj-time.format :as tf]
+    [clj-time.coerce :as tce]
+    [clojure.java.io :as io]
+    [liberator.util :only [parse-http-date http-date] :as du]
+    )
   (:gen-class)
   )
 
@@ -41,13 +42,13 @@
 (defn s-resp-date [fmt date]
   (tf/unparse fmt (tce/from-date date)))
 
-(defn dst-uri! [save-dir fmt-dir fmt-fname base-fname date ext]
+(defn dst-uri! [save-dir fmt-dir fmt-fname base-fname date]
   "Create destination uri and ensure the directory structure exists. Side effects!"
   (let [s (str save-dir "/" (tf/unparse fmt-dir date))]
     (ensure-directory! s)
-    (str s "/" base-fname "." (tf/unparse fmt-fname date) "." ext)))
+    (str s "/" base-fname "." (tf/unparse fmt-fname date) ".xml")))
 
-(defn download! [src-uri save-dir fmt-dir fmt-fname base-fname ext]
+(defn download! [src-uri save-dir fmt-dir fmt-fname base-fname]
   "Dowload file from xml and save it under given name. Side effects!"
   (let [ http-resp (client/get src-uri
                                {:decode-body-headers true :as :auto})
@@ -55,8 +56,7 @@
                           fmt-dir
                           fmt-fname
                           base-fname
-                          (resp-date http-resp)
-                          ext)
+                          (resp-date http-resp))
         ]
     (spit dst-uri (resp-text http-resp))
     dst-uri))
@@ -66,9 +66,8 @@
 (def fmt-dir-s (tf/formatter "yyyy/MM/dd"))
 (def fmt-fname-s (tf/formatter "yyyy-MM-dd_hh-mm-ss"))
 (def base-fname "vircurex")
-(def ext "xml")
 
 (client/get "https://vircurex.com/api/get_info_for_currency.xml" {:decode-body-headers true :as :auto})
 (defn -main [src-uri save-dir]
-  (download! src-uri save-dir fmt-dir-s fmt-fname-s base-fname ext))
+  (download! src-uri save-dir fmt-dir-s fmt-fname-s base-fname))
 
