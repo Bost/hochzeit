@@ -1,13 +1,11 @@
 (ns hochzeit.download
   (:require
     [clojure.xml :as xml]
-    [clojure.data.json :as json]
     [clojure.zip :as zip]
     [clj-http.client :as client]
-    [clj-http.cookies :as cookies]
-    [clj-time.core :as tcr]
     [clj-time.format :as tf]
     [clj-time.coerce :as tce]
+    [clj-time.core :as tco]
     [clojure.java.io :as io]
     [liberator.util :only [parse-http-date http-date] :as du]
     )
@@ -35,16 +33,16 @@
 (defn resp-text [http-resp]
   (:body http-resp))
 
-(defn resp-date[http-resp]
-  (tce/from-date (du/parse-http-date (:date (resp-headers http-resp)))))
+(defn resp-date-24 [date]
+  (tco/minus date (tco/hours 24)))
 
-; This might not be needed. I could parse the date usind clj-time
-(defn s-resp-date [fmt date]
-  (tf/unparse fmt (tce/from-date date)))
+(defn resp-date [http-resp]
+  (tce/from-date (du/parse-http-date (:date (resp-headers http-resp)))))
 
 (defn dst-uri! [save-dir fmt-dir fmt-fname base-fname date]
   "Create destination uri and ensure the directory structure exists. Side effects!"
   (let [s (str save-dir "/" (tf/unparse fmt-dir date))]
+    ;(resp-date-24 date)
     (ensure-directory! s)
     (str s "/" base-fname "." (tf/unparse fmt-fname date) ".xml")))
 
