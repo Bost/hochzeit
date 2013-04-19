@@ -1,6 +1,6 @@
 (ns hochzeit.core
   (:use [hochzeit.download :as download]
-        [clojure.data.zip.xml] ;s:only [attr text xml-> xml1->] 
+        [clojure.data.zip.xml] ;s:only [attr text xml-> xml1->]
         [hochzeit.analyze :as analyze])
   (:require
     [clj-time.format :as tf]
@@ -21,18 +21,15 @@
 (def fname-format (tf/formatter "yyyy-MM-dd_hh-mm-ss"))
 (def ext "xml")
 
-;(def dst-uri (download/do-download
-              ;src-uri save-dir base-name fname-format ext))
-;(println (str "File saved: " dst-uri))
-
 (def directory (clojure.java.io/file (str save-dir tstamp)))
-(def files (take 3 (file-seq directory)))
+(def files (take 7 (file-seq directory)))
+;=> (println "files:\n" files)
 
 (def fname-base (str "./vircurex.2013-04-15_11-48-00"))
 (def fname-xml (str fname-base ".xml"))
 (def fname-xml (str save-dir tstamp "/vircurex.2013-04-19_05-05-04.xml"))
-;(def fname-xml "/home/bost/vircurex/vircurex.2013-04-14_09-10-08.xml")
-;(analyze/combine (analyze/currencies fname-xml))
+;=> (analyze/currencies fname-xml)
+;[:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD]
 
 ;(ts/parse "http://example.com")
 
@@ -41,57 +38,52 @@
 ;(first (xml-> zipped :BTC :EUR :last-trade (attr :type)))
 ;(xml1-> zipped :BTC :EUR :last-trade text)
 
-;(prn "files: " files)
-;=> 
-(prn "do-parse: " (analyze/do-parse files analyze/currencies))
-;"do-parse: " ([:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD] [:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD])
 
 ; get rid of duplicates
-(def hs-currencies (into #{} (reduce into (analyze/do-parse files analyze/currencies))))
-;=> (prn "hs-currencies: " hs-currencies)
-;"hs-currencies: " #{:PPC :BTC :USD :NMC :CHF :LTC :SC :TRC :IXC :EUR :DVC}
-
-(def currencies (into [] hs-currencies))
-;=> (prn "currencies: " currencies)
-;"currencies: " [:PPC :BTC :USD :NMC :CHF :LTC :SC :TRC :IXC :EUR :DVC]
+(def hs-all-currencies (into #{} (reduce into (analyze/do-func analyze/currencies files))))
+(def all-currencies (into [] hs-all-currencies))
+;=> (println "all-currencies:\n" all-currencies)
+;[:PPC :BTC :USD :NMC :CHF :LTC :SC :TRC :IXC :EUR :DVC]
 
 ;=> (= combine create-pairs)
 ;true
-(def combined-currencies (analyze/combine currencies))
+;(defn currency-pairs [] (analyze/combine all-currencies))
+(defn currency-pairs []
+ [[:EUR :BTC] [:PPC :USD]])
+(println "currency-pairs:\n" (currency-pairs))
 
 (defn get-vals [ zpp tag-0-1 tag-2 out-type]
   "get rid of the (if ...)'s to gain speed"
   (let [v (xml1-> zpp (first tag-0-1) (second tag-0-1) tag-2 text)]
     ;(println v)
-    (if (nil? v)                       
+    (if (nil? v)
       nil
       (if (= out-type :headers)
         tag-0-1
         v))))
 
+(defn fmt [x] (format "%16s" x))
+
+;(type (format "%16s" "aaa"))
+
 (defn get-zipped [fname-xml]
   (zip/xml-zip (xml/parse fname-xml)))
 
-(def non-nil-pairs (remove nil?  (for [currency-pair combined-currencies]
-                (get-vals (get-zipped fname-xml) 
-                          currency-pair :highest-bid :headers))))
+(defn currency-pair-value-all-tstamps []
+  (for [zpp (analyze/do-func get-zipped files)]
+    (for [currency-pair (currency-pairs)]
+      ;(v zpp currency-pair)
+      (get-vals zpp currency-pair :highest-bid :vals)
+      )))
 
+;(currency-pair-value-all-tstamps)
+(dorun
+  (map #(print (fmt %)) (into [""] (currency-pairs))))
 
-(defn fmt [x] (map #(format "%16s" %) x)) 
+(doseq [currency-pair-value-tstamp (currency-pair-value-all-tstamps)]
+  (println
+    (dorun (map #(print (fmt %)) (into ["2013-04-19"] currency-pair-value-tstamp)))))
 
-(def v (map #(get-vals zipped % :highest-bid :vals) non-nil-pairs))
-(print (fmt v))
-(print non-nil-pairs)
-
-
-
-(for [zpp (analyze/do-parse files get-zipped)]
-  (let [non-nil-pairs (remove nil? (for [currency-pair combined-currencies]
-                                     (get-vals zpp currency-pair :highest-bid :headers)))]
-    (println (fmt non-nil-pairs))
-    (println (fmt
-               (map #(get-vals zpp % :highest-bid :vals) non-nil-pairs)))
-    ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -131,38 +123,3 @@
   ;]
  ;]
 
-;(def first-node (ts/parse fname-xml))
-
-;(defn val-of-children-of [node tag-name]
-  ;"Get value of the child-nodes of node for given tag-name"
-  ;(for [child-node (children node)
-        ;:when (= (tag child-node) tag-name) ]
-    ;(children child-node)))  ;(first (children child-node))) ;use it to get 'inside' of lazy-seq
-
-;(defn key-of [node0 node1]
-  ;"Create :nameNode0-nameNode1"
-  ;(keyword (str (name (tag node0))
-                ;"-"
-                ;(name (tag node1)))))
-
-;(defn kv-pair-of [node tag-name]
-  ;"key value pairs: {:nameNode-nameChild0 tagValChild0}"
-  ;"               , {:nameNode-nameChild1 tagValChild1}"
-  ;"               , ..."
-  ;(for [child-node (children node)]
-    ;{ (key-of node child-node)
-      ;(val-of-children-of child-node tag-name)}))
-
-;(defn hash-map-of-kv-pairs [node tag-name]
-  ;(into {}
-        ;(for [child-node (children node)]
-          ;(into {} (kv-pair-of child-node tag-name)))))
-
-;(defn lazy-val [k hm]
-  ;(first
-    ;(first
-      ;(k hm))))
-
-;(def highest-bids (hash-map-of-kv-pairs first-node :highest-bid))
-;;(prn highest-bids)
-;;(lazy-val :BTC-EUR highest-bids)

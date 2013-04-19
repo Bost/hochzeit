@@ -22,12 +22,12 @@
            (first (xml1-> (zip/xml-zip (xml/parse fname-xml)))))))
 
 (defn currencies [fname-xml]
-  (reduce into (cons (:tag (kids fname-xml))
+  (into [] (cons (:tag (kids fname-xml))
                  (for [c (:content (kids fname-xml))] 
                    (:tag c)))))
 
 ;(def hs-currencies (into #{} (reduce into (analyze/do-parse files analyze/currencies))))
-;;=> (prn "hs-currencies: " hs-currencies)
+;;=> (println "hs-currencies: " hs-currencies)
 ;;"hs-currencies: " #{:PPC :BTC :USD :NMC :CHF :LTC :SC :TRC :IXC :EUR :DVC}
 
 ;(def currencies (into [] hs-currencies))
@@ -39,7 +39,7 @@
                  :when (not (= x y))]
              [x y])))
 
-(defn do-parse [files func]
+(defn do-func [func files]
   ; for builds a lazy seq; doseq is for executing side-effects and returns nil
   (remove nil?
           (for [file files]
