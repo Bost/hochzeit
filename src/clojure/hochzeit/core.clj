@@ -17,6 +17,7 @@
 
 ;(def src-uri "http://google.com")
 (def base-name "vircurex")
+(def tstamp "2013/04/19")
 (def fname-format (tf/formatter "yyyy-MM-dd_hh-mm-ss"))
 (def ext "xml")
 
@@ -24,12 +25,12 @@
               ;src-uri save-dir base-name fname-format ext))
 ;(println (str "File saved: " dst-uri))
 
-(def directory (clojure.java.io/file save-dir))
+(def directory (clojure.java.io/file (str save-dir tstamp)))
 (def files (take 3 (file-seq directory)))
 
 (def fname-base (str "./vircurex.2013-04-15_11-48-00"))
 (def fname-xml (str fname-base ".xml"))
-(def fname-xml "/home/bost/vircurex/vircurex.2013-04-15_06-50-09.xml")
+(def fname-xml (str save-dir tstamp "/vircurex.2013-04-19_05-05-04.xml"))
 ;(def fname-xml "/home/bost/vircurex/vircurex.2013-04-14_09-10-08.xml")
 ;(analyze/combine (analyze/currencies fname-xml))
 
@@ -40,21 +41,23 @@
 ;(first (xml-> zipped :BTC :EUR :last-trade (attr :type)))
 ;(xml1-> zipped :BTC :EUR :last-trade text)
 
-(def vec-of-vectors (into #{} (analyze/do-parse files analyze/currencies)))
-;=> (prn vec-of-vectors)
-;[nil [:BTC :AAA :DVC :EUR] [:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD]]
+;(prn "files: " files)
+;=> 
+(prn "do-parse: " (analyze/do-parse files analyze/currencies))
+;"do-parse: " ([:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD] [:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD])
 
-; Combine a set of collections into a single collection
-(def elems-of-vec-of-vectors
-  ;(for [sub-vec vec-of-vectors e sub-vec] e))  ; or alternatively use reduce-into:
-  (reduce into vec-of-vectors))
+; get rid of duplicates
+(def hs-currencies (into #{} (reduce into (analyze/do-parse files analyze/currencies))))
+;=> (prn "hs-currencies: " hs-currencies)
+;"hs-currencies: " #{:PPC :BTC :USD :NMC :CHF :LTC :SC :TRC :IXC :EUR :DVC}
 
-(def currs (into [] elems-of-vec-of-vectors))
-;(prn currs)
+(def currencies (into [] hs-currencies))
+;=> (prn "currencies: " currencies)
+;"currencies: " [:PPC :BTC :USD :NMC :CHF :LTC :SC :TRC :IXC :EUR :DVC]
 
 ;=> (= combine create-pairs)
 ;true
-(def combined-currencies (analyze/combine currs))
+(def combined-currencies (analyze/combine currencies))
 
 (defn get-vals [ zpp tag-0-1 tag-2 out-type]
   "get rid of the (if ...)'s to gain speed"
@@ -66,8 +69,12 @@
         tag-0-1
         v))))
 
+(defn get-zipped [fname-xml]
+  (zip/xml-zip (xml/parse fname-xml)))
+
 (def non-nil-pairs (remove nil?  (for [currency-pair combined-currencies]
-                (get-vals zipped currency-pair :highest-bid :headers))))
+                (get-vals (get-zipped fname-xml) 
+                          currency-pair :highest-bid :headers))))
 
 
 (defn fmt [x] (map #(format "%16s" %) x)) 
@@ -77,8 +84,6 @@
 (print non-nil-pairs)
 
 
-(defn get-zipped [fname-xml]
-  (zip/xml-zip (xml/parse fname-xml)))
 
 (for [zpp (analyze/do-parse files get-zipped)]
   (let [non-nil-pairs (remove nil? (for [currency-pair combined-currencies]
