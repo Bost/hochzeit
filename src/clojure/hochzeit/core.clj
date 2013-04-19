@@ -18,10 +18,10 @@
 ;(def src-uri "http://google.com")
 (def base-name "vircurex")
 (def fname-format (tf/formatter "yyyy-MM-dd_hh-mm-ss"))
-(def extention "xml")
+(def ext "xml")
 
 ;(def dst-uri (download/do-download
-              ;src-uri save-dir base-name fname-format extention))
+              ;src-uri save-dir base-name fname-format ext))
 ;(println (str "File saved: " dst-uri))
 
 (def directory (clojure.java.io/file save-dir))

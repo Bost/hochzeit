@@ -1,10 +1,4 @@
 (ns hochzeit.download
-  ;(:use 
-        ;[clojure.xml]
-        ;[clojure.java.io]
-        ;[clojure.data.zip.xml :only (attr text xml->)] ; dep: see below
-        ;)
-
   (:require [clojure.xml :as xml]
             [clojure.data.json :as json]
             [clojure.zip :as zip]
@@ -13,107 +7,68 @@
             [clj-time.core :as tcr]
             [clj-time.format :as tf]
             [clj-time.coerce :as tce]
+            [clojure.java.io :as io]
             [liberator.util :only [parse-http-date http-date] :as du]
             )
   (:gen-class)
   )
 
-(defn do-download [ src-uri save-dir base-name fname-format extention ]
-  "Dowload file from xml and save it under given name. Contains side effects!"
+(defn ls [path]
+  (let [file (java.io.File. path)]
+    (if (.isDirectory file)
+      (seq (.list file))
+      (when (.exists file)
+        [path]))))
+
+(defn mkdir [path]
+  (.mkdirs (io/file path)))
+
+(defn ensure-directory! [path]
+  (when-not (ls path)
+    (mkdir path)))
+
+(defn resp-headers [http-resp]
+  (into {}
+        (for [[k v] (:headers http-resp)] [(keyword k) (str v)])))
+
+(defn resp-text [http-resp]
+  (:body http-resp))
+
+(defn resp-date[http-resp]
+  (tce/from-date (du/parse-http-date (:date (resp-headers http-resp)))))
+
+; This might not be needed. I could parse the date usind clj-time
+(defn s-resp-date [fmt date]
+  (tf/unparse fmt (tce/from-date date)))
+
+(defn dst-uri! [save-dir fmt-dir fmt-fname base-fname date ext]
+  "Create destination uri and ensure the directory structure exists. Side effects!"
+  (let [s (str save-dir "/" (tf/unparse fmt-dir date))]
+    (ensure-directory! s)
+    (str s "/" base-fname "." (tf/unparse fmt-fname date) "." ext)))
+
+(defn download! [src-uri save-dir fmt-dir fmt-fname base-fname ext]
+  "Dowload file from xml and save it under given name. Side effects!"
   (let [ http-resp (client/get src-uri
                                {:decode-body-headers true :as :auto})
+        dst-uri (dst-uri! save-dir
+                          fmt-dir
+                          fmt-fname
+                          base-fname
+                          (resp-date http-resp)
+                          ext)
+        ]
+    (spit dst-uri (resp-text http-resp))
+    dst-uri))
 
-        resp-headers (into {}
-                           (for [[k v] (:headers http-resp)] [(keyword k) (str v)]))
+;(def src-uri "https://vircurex.com/api/get_info_for_currency.xml")
+;(def save-dir "/tmp")
+(def fmt-dir-s (tf/formatter "yyyy/MM/dd"))
+(def fmt-fname-s (tf/formatter "yyyy-MM-dd_hh-mm-ss"))
+(def base-fname "vircurex")
+(def ext "xml")
 
-        ; This might not be needed. I could parse the date usind clj-time
-        resp-date (tf/unparse fname-format 
-                              (tce/from-date (du/parse-http-date (:date resp-headers))))
+(client/get "https://vircurex.com/api/get_info_for_currency.xml" {:decode-body-headers true :as :auto})
+(defn -main [src-uri save-dir]
+  (download! src-uri save-dir fmt-dir-s fmt-fname-s base-fname ext))
 
-        resp-text (:body http-resp)
-
-        dst-uri (str save-dir base-name "." resp-date "." extention) ]
-    (spit dst-uri resp-text)
-    dst-uri)) 
-
-(defn -main [ src-uri save-dir base-name fname-format extention ]
-  (do-download src-uri save-dir base-name fname-format extention))
-
-;(comment
-;(def src-uri "src/resources/test.json")
-;(def raw-content (slurp src-uri))
-;;(def raw-content {:cookies {:v0100session {:discard true}}})
-;;(println raw-content)
-;(def w (json/write-str raw-content))
-
-;;(clojure.pprint/pprint (:body http-resp))
-;;(clojure.pprint/pprint (:cookies http-resp))
-;;(clojure.pprint/pprint resp-headers)
-
-;(clojure.pprint/pprint (clj-http.cookies/get-cookies cs))
-
-;;(def src-uri "src/resources/data.cookies.xml")
-;;(def src-uri "src/resources/data.backup.xml")
-;;(def src-uri "src/resources/data.small.xml")
-
-;(def raw-content (slurp src-uri))
-;(def raw-content {:cookies {:v0100session {:discard true}}})
-;;(println raw-content)
-;(def w (json/write-str raw-content))
-;;(json/read-str raw-content)
-
-;(println w)
-
-;(def dst-uri "/tmp/test2.txt")
-;;cat "/tmp/test2.txt"
-;;rm /tmp/test2.txt
-;;/tmp/test2.txt
-;;ls -la "src/resources/data.small.xml"
-
-;;(def raw-content (client/get src-uri))
-;;(def xml (xml/parse src-uri))
-
-;(spit dst-uri raw-content)
-
-;(println "File saved: " dst-uri)
-
-;(def xml0 (xml/parse "src/resources/myfile.xml"))
-;(def zipped0 (zip/xml-zip xml0))
-;; ("Track one" "Track two")
-;(xml-> zipped0 :track :name text)
-;; ("t1" "t2")
-;(xml-> zipped0 :track (attr :id))      
-
-;(def zipped1 (zip/xml-zip xml))
-;; ("Track one" "Track two")
-;(xml-> zipped1 :BTC :EUR :lowest-ask text)
-;; ("t1" "t2")
-;(xml-> zipped1 :last-trade (attr :type))       
-
-;(defn zip-str [s]
-  ;(zip/xml-zip (xml/parse (java.io.ByteArrayInputStream. (.getBytes s)))))
-
-;(def paintings (zip-str "<?xml version='1.0' encoding='UTF-8'?>
-    ;<painting>
-      ;<img src='madonna.jpg' alt='Foligno Madonna, by Raphael'/>
-      ;<caption>This is Raphael's 'Foligno' Madonna, painted in
-      ;<date>1511</date>-<date>1512</date>.</caption>
-    ;</painting>"))
-
-;(xml-> paintings :caption text)
-;(xml-> paintings :caption :date text)
-;(xml-> paintings :img (attr :src))
-
-;(for [
-      ;x (xml-seq 
-              ;(parse (java.io.File. "src/resources/data.small.xml")))
-                 ;:when (= :lowest-ask (:tag x))
-      ;;y (xml-seq 
-              ;;(parse (java.io.File. "src/resources/data.small.xml")))
-                 ;;:when (= :last-trade (:tag y))
-      ;]
-         ;(first (:content x))
-         ;;(first (:content y))
-  ;)
-;(println xml)
-;)
