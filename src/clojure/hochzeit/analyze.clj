@@ -22,9 +22,15 @@
            (first (xml1-> (zip/xml-zip (xml/parse fname-xml)))))))
 
 (defn currencies [fname-xml]
-  (into [] (cons (:tag (kids fname-xml))
+  (reduce into (cons (:tag (kids fname-xml))
                  (for [c (:content (kids fname-xml))] 
                    (:tag c)))))
+
+;(def hs-currencies (into #{} (reduce into (analyze/do-parse files analyze/currencies))))
+;;=> (prn "hs-currencies: " hs-currencies)
+;;"hs-currencies: " #{:PPC :BTC :USD :NMC :CHF :LTC :SC :TRC :IXC :EUR :DVC}
+
+;(def currencies (into [] hs-currencies))
 
 (defn combine [v]
   "Create cartesian product of vector v with vector v withouth the diagonal elements"
