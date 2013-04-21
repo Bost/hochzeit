@@ -12,6 +12,7 @@
             [clj-http.cookies :as cookies]
             [clj-time.core :as tcr]
             [clj-time.coerce :as tce]
+            [me.raynes.fs :as fs]
             [liberator.util :only [parse-http-date http-date] :as du])
   (:gen-class))
 
@@ -47,6 +48,13 @@
               (if (not (.isDirectory file))
                 (func path))))))
 
+(defn fname-younger-than [date path]
+  "Alphabetically sort files under given path and return fnames youger that date"
+  (remove nil?
+          (for [f (sort (fs/list-dir path))]
+            (if (<= (compare (str "vircurex."date".xml") f) 0)
+              f
+              nil))))
 ; TODO see https://github.com/nathell/clj-tagsoup
 ; TODO see https://github.com/cgrand/enlive
 ; TODO Schejulure

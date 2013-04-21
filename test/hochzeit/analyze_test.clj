@@ -13,7 +13,6 @@
     [me.raynes.fs :as fs]
     [liberator.util :only [parse-http-date http-date] :as du]
     )
-  ;(:import [java.io.File])
   )
 
 ; TODO test for corner cases: date too high/low
@@ -26,17 +25,10 @@
 (tf/unparse d/fmt-fname-s date-24)
 (prn c/save-dir)
 ;(prn (d/is-dir? c/save-dir))
-(def d (str c/save-dir str-date-24))
-(prn d)
-(fs/list-dir d)
-;(d/ls-r d #".*\.xml")
+(def path (str c/save-dir str-date-24))
 
-; Alphabetically sort files from 2013/10/19 and 2013/10/18 and take those between:
-;     2013/10/18_vircurex.2013_10-33-15 
-; and 
-;     2013/10/19_vircurex.2013_10-33-15
+(dorun (map #(println %) (into [] (a/fname-younger-than "2013-04-17_10-55-03" path))))
 
-  
 ;(def save-dir "/tmp")
 ;(def downloaded-file (d/-main c/src-uri save-dir))
 
