@@ -13,6 +13,8 @@
     [liberator.util :only [parse-http-date http-date] :as du]
     ))
 
+; TODO test for corner cases: date too high/low
+
 (def date (tce/from-date (du/parse-http-date "Sat, 19 Oct 2013 10:33:15 GMT" )))
 (prn date)
 (def date-24 (d/resp-date-24 date))
