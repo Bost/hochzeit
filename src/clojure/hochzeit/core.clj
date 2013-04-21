@@ -8,7 +8,9 @@
     [clj-time.format :as tf]
     [clojure.zip :as zip]
     [clojure.xml :as xml]
-    ))
+    )
+  (:import [java.io.File])
+  )
 
 (def src-uri "https://vircurex.com/api/get_info_for_currency.xml")
 

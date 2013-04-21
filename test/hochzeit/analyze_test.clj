@@ -10,17 +10,27 @@
     [clj-time.coerce :as tce]
     [clj-time.core :as tco]
     [clj-time.format :as tf]
+    [me.raynes.fs :as fs]
     [liberator.util :only [parse-http-date http-date] :as du]
-    ))
+    )
+  ;(:import [java.io.File])
+  )
 
 ; TODO test for corner cases: date too high/low
 
-(def date (tce/from-date (du/parse-http-date "Sat, 19 Oct 2013 10:33:15 GMT" )))
+(def date (tce/from-date (du/parse-http-date "Thu, 18 Apr 2013 10:33:15 GMT" )))
 (prn date)
 (def date-24 (d/resp-date-24 date))
 (prn date-24)
-(tf/unparse d/fmt-dir-s date-24)
+(def str-date-24 (tf/unparse d/fmt-dir-s date-24))
 (tf/unparse d/fmt-fname-s date-24)
+(prn c/save-dir)
+;(prn (d/is-dir? c/save-dir))
+(def d (str c/save-dir str-date-24))
+(prn d)
+(fs/list-dir d)
+;(d/ls-r d #".*\.xml")
+
 ; Alphabetically sort files from 2013/10/19 and 2013/10/18 and take those between:
 ;     2013/10/18_vircurex.2013_10-33-15 
 ; and 
