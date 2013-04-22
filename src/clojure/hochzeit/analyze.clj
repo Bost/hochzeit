@@ -1,20 +1,16 @@
 (ns hochzeit.analyze
-  (:use [clojure.xml]
-        [clojure.java.io]
-        [clojure.data.zip.xml] ;s:only [attr text xml-> xml1->] 
-        ;[clojure.data.zip.xml s:only [attr text xml-> xml1->]]
-        )
-  (:require [clojure.xml :as xml]
-            [clj-time.format :as tf]
-            [clojure.data.json :as json]
-            [clojure.zip :as zip]
-            [clj-http.client :as client]
-            [clj-http.cookies :as cookies]
-            [clj-time.core :as tcr]
-            [clj-time.coerce :as tce]
-            [me.raynes.fs :as fs]
-            [liberator.util :only [parse-http-date http-date] :as du])
-  (:gen-class))
+  (:use
+    [clojure.xml]
+    [clojure.java.io]
+    [clojure.data.zip.xml]
+    )
+  (:require
+    [clojure.xml :as xml]
+    [clojure.zip :as zip]
+    [me.raynes.fs :as fs]
+    )
+  (:gen-class)
+  )
 
 
 (defn kids [fname-xml]
@@ -48,11 +44,11 @@
               (if (not (.isDirectory file))
                 (func path))))))
 
-(defn fname-younger-than [date path]
+(defn fname-younger-than [date path base-fname]
   "Alphabetically sort files under given path and return fnames youger that date"
   (remove nil?
           (for [f (sort (fs/list-dir path))]
-            (if (<= (compare (str "vircurex."date".xml") f) 0)
+            (if (<= (compare (str base-fname "." date ".xml") f) 0)
               f
               nil))))
 ; TODO see https://github.com/nathell/clj-tagsoup
