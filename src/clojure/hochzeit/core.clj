@@ -16,47 +16,68 @@
   (:gen-class)
   )
 
-;(def src-uri "http://google.com")
-(def src-uri "https://vircurex.com/api/get_info_for_currency.xml")
+;(def c-src-uri "http://google.com")
+(def c-src-uri "https://vircurex.com/api/get_info_for_currency.xml")
 
-(def file-sep (System/getProperty "file.separator"))
-(def os-name (System/getProperty "os.name"))
-(def home-dir (if (= os-name "Windows 7")
-                (str "C:" file-sep "cygwin" file-sep "home" file-sep
+(def c-file-sep (System/getProperty "file.separator"))
+(def c-os-name (System/getProperty "os.name"))
+(def c-home-dir (if (= c-os-name "Windows 7")
+                (str "C:" c-file-sep "cygwin" c-file-sep "home" c-file-sep
                      (System/getProperty "user.name"))
                 (System/getProperty "user.home")))
-(def save-dir (str home-dir file-sep "vircurex" file-sep))
-(def fmt-dir (tf/formatter (str "yyyy" file-sep "MM" file-sep "dd")))
-(def fmt-fname (tf/formatter "yyyy-MM-dd_hh-mm-ss"))
-(def base-fname "vircurex")
+(def c-save-dir (str home-dir c-file-sep "vircurex" c-file-sep))
+(def c-fmt-dir (tf/formatter (str "yyyy" c-file-sep "MM" c-file-sep "dd")))
+(def c-fmt-fname (tf/formatter "yyyy-MM-dd_hh-mm-ss"))
+(def c-base-fname "vircurex")
 
 
 
-;(def date (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 05:05:04 GMT" )))
-(def date (tce/from-date (du/parse-http-date "Thu, 15 Apr 2013 11:54:00 GMT" )))
+(def c-date (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 05:05:04 GMT" )))
+;(def date (tce/from-date (du/parse-http-date "Thu, 15 Apr 2013 11:54:00 GMT" )))
+;=> (prn c-date)
 
 (defn save-date-dir [save-dir date fmt-dir]
-  (str save-dir file-sep (tf/unparse fmt-dir date)))
+  (str save-dir (tf/unparse fmt-dir date)))
 
-(def files (take 7 (file-seq (save-date-dir save-dir date fmt-dir))))
-;=> (println "files:\n" files)
+(defn fname-date [date fmt-fname]
+  (str "" (tf/unparse fmt-fname date)))
 
-(def fname-xml (save-date-dir save-dir date fmt-dir))
-;=> (a/currencies fname-xml)
+(def c-fname-date (fname-date date fmt-fname))
+;=> (prn c-save-dir)
+;=> (prn c-fname-date)
+;=> (prn c-fmt-dir)
+
+(def c-save-date-dir (str (save-date-dir c-save-dir
+                                         c-date
+                                         c-fmt-dir) c-file-sep))
+;=> (prn c-save-date-dir)
+(def c-younger (a/fname-younger-than c-fname-date
+                                     c-save-date-dir
+                                     base-fname))
+;=> (type c-younger)
+;=> (prn c-younger)
+
+(def c-vec-younger (into [] younger))
+(def c-full-paths (map #(io/file (str c-save-date-dir %)) c-vec-younger))
+
+;=>
+(prn c-full-paths)
 
 ; get rid of duplicates
-;(def hs-all-currencies (into #{} (reduce into (a/do-func a/currencies files))))
-(def hs-all-currencies (into #{} [:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD]))
-(def all-currencies (into [] hs-all-currencies))
-;=> (println "all-currencies:\n" all-currencies)
+(def c-hs-all-currencies (into #{} (reduce into (a/do-func a/currencies c-full-paths))))
+;(def c-hs-all-currencies (into #{} [:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD]))
+(def c-all-currencies (into [] c-hs-all-currencies))
+;=>
+(println "all-currencies:\n" c-all-currencies)
 ;[:PPC :BTC :USD :NMC :CHF :LTC :SC :TRC :IXC :EUR :DVC]
 
 ;=> (= combine create-pairs)
 ;true
-(defn currency-pairs [] (a/combine all-currencies))
+(defn currency-pairs [] (a/combine c-all-currencies))
 ;(defn currency-pairs []
  ;[[:EUR :BTC] [:PPC :USD]])
-;=> (println "currency-pairs:\n" (currency-pairs))
+;=>
+(println "currency-pairs:\n" (currency-pairs))
 
 (defn get-vals [ zpp tag-0-1 tag-2 out-type]
   "get rid of the (if ...)'s to gain speed"
@@ -72,21 +93,20 @@
 (defn get-zipped [fname-xml]
   (zip/xml-zip (xml/parse fname-xml)))
 
-(defn currency-pair-value-all-tstamps []
-  (for [zpp (a/do-func get-zipped files)]
+(defn currency-pair-value-all-tstamps [full-paths]
+  (for [zpp (a/do-func get-zipped full-paths)]
     (for [currency-pair (currency-pairs)]
       (get-vals zpp currency-pair :highest-bid :vals)
       )))
 
-;(currency-pair-value-all-tstamps)
-(comment
+;=> (prn (currency-pair-value-all-tstamps c-full-paths))
+
 (dorun
   (map #(print (fmt %)) (into [""] (currency-pairs))))
 
-(doseq [currency-pair-value-tstamp (currency-pair-value-all-tstamps)]
+(doseq [currency-pair-value-tstamp (currency-pair-value-all-tstamps c-full-paths)]
   (println
     (dorun (map #(print (fmt %)) (into ["2013-04-19"] currency-pair-value-tstamp)))))
-)
 
 ; Wrap java.io.file methods
 (defn is-file? [f] (.isFile f))

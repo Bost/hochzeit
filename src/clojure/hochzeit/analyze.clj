@@ -8,6 +8,8 @@
     [clojure.xml :as xml]
     [clojure.zip :as zip]
     [me.raynes.fs :as fs]
+    [liberator.util :only [parse-http-date http-date] :as du]
+    [clj-time.coerce :as tce]
     )
   (:gen-class)
   )
@@ -44,11 +46,13 @@
               (if (not (.isDirectory file))
                 (func path))))))
 
-(defn fname-younger-than [date path base-fname]
-  "Alphabetically sort files under given path and return fnames youger that date"
+(def d (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 05:05:04 GMT" )))
+
+(defn fname-younger-than [formated-date path base-fname]
+  "Alphabetically sort files under given path and return fnames youger that formated-date"
   (remove nil?
           (for [f (sort (fs/list-dir path))]
-            (if (<= (compare (str base-fname "." date ".xml") f) 0)
+            (if (<= (compare (str base-fname "." formated-date ".xml") f) 0)
               f
               nil))))
 ; TODO see https://github.com/nathell/clj-tagsoup
