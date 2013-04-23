@@ -15,6 +15,8 @@
     )
   (:gen-class)
   )
+;;debugging parts of expressions
+(defmacro dbg[x] `(let [x# ~x] (println "dbg:" '~x "=" x#) x#))
 
 ;(def c-src-uri "http://google.com")
 (def c-src-uri "https://vircurex.com/api/get_info_for_currency.xml")
@@ -25,59 +27,42 @@
                 (str "C:" c-file-sep "cygwin" c-file-sep "home" c-file-sep
                      (System/getProperty "user.name"))
                 (System/getProperty "user.home")))
-(def c-save-dir (str home-dir c-file-sep "vircurex" c-file-sep))
+(def c-save-dir (str c-home-dir c-file-sep "vircurex" c-file-sep))
 (def c-fmt-dir (tf/formatter (str "yyyy" c-file-sep "MM" c-file-sep "dd")))
 (def c-fmt-fname (tf/formatter "yyyy-MM-dd_hh-mm-ss"))
 (def c-base-fname "vircurex")
 
 
 
-(def c-date (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 05:05:04 GMT" )))
+(def c-date (tce/from-date (du/parse-http-date "Thu, 22 Apr 2013 11:56:00 GMT" )))
+;(def c-date (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 05:05:04 GMT" )))
 ;(def date (tce/from-date (du/parse-http-date "Thu, 15 Apr 2013 11:54:00 GMT" )))
-;=> (prn c-date)
 
 (defn save-date-dir [save-dir date fmt-dir]
-  (str save-dir (tf/unparse fmt-dir date)))
+  (str save-dir (tf/unparse fmt-dir date) c-file-sep))
 
 (defn fname-date [date fmt-fname]
   (str "" (tf/unparse fmt-fname date)))
 
-(def c-fname-date (fname-date date fmt-fname))
-;=> (prn c-save-dir)
-;=> (prn c-fname-date)
-;=> (prn c-fmt-dir)
+(defn full-paths [save-dir date fmt-dir fmt-fname]
+  (let [sdd (save-date-dir save-dir date fmt-dir)]
+    (map #(io/file (str sdd %))
+         (into []
+               (a/fname-younger-than (fname-date date fmt-fname)
+                                     sdd
+                                     c-base-fname)))))
 
-(def c-save-date-dir (str (save-date-dir c-save-dir
-                                         c-date
-                                         c-fmt-dir) c-file-sep))
-;=> (prn c-save-date-dir)
-(def c-younger (a/fname-younger-than c-fname-date
-                                     c-save-date-dir
-                                     base-fname))
-;=> (type c-younger)
-;=> (prn c-younger)
-
-(def c-vec-younger (into [] younger))
-(def c-full-paths (map #(io/file (str c-save-date-dir %)) c-vec-younger))
-
-;=>
-(prn c-full-paths)
-
-; get rid of duplicates
-(def c-hs-all-currencies (into #{} (reduce into (a/do-func a/currencies c-full-paths))))
-;(def c-hs-all-currencies (into #{} [:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD]))
-(def c-all-currencies (into [] c-hs-all-currencies))
-;=>
-(println "all-currencies:\n" c-all-currencies)
-;[:PPC :BTC :USD :NMC :CHF :LTC :SC :TRC :IXC :EUR :DVC]
+(defn all-currencies [save-dir date fmt-dir fmt-fname]
+  (into []
+        (into #{} ; use hash-set to get rid of duplicates
+              ;[:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD]))
+              (reduce into (a/do-func a/currencies (dbg (full-paths save-dir date fmt-dir fmt-fname)))))))
 
 ;=> (= combine create-pairs)
 ;true
-(defn currency-pairs [] (a/combine c-all-currencies))
-;(defn currency-pairs []
- ;[[:EUR :BTC] [:PPC :USD]])
-;=>
-(println "currency-pairs:\n" (currency-pairs))
+(defn currency-pairs [save-dir date fmt-dir fmt-fname]
+ ;([[:EUR :BTC] [:PPC :USD]]))
+  (a/combine (all-currencies save-dir date fmt-dir fmt-fname)))
 
 (defn get-vals [ zpp tag-0-1 tag-2 out-type]
   "get rid of the (if ...)'s to gain speed"
@@ -93,20 +78,19 @@
 (defn get-zipped [fname-xml]
   (zip/xml-zip (xml/parse fname-xml)))
 
-(defn currency-pair-value-all-tstamps [full-paths]
-  (for [zpp (a/do-func get-zipped full-paths)]
-    (for [currency-pair (currency-pairs)]
-      (get-vals zpp currency-pair :highest-bid :vals)
-      )))
+(defn currency-pair-value-all-tstamps [save-dir date fmt-dir fmt-fname]
+  (for [zpp (a/do-func get-zipped (full-paths save-dir date fmt-dir fmt-fname))]
+    (for [currency-pair (currency-pairs save-dir date fmt-dir fmt-fname)]
+      (get-vals zpp currency-pair :highest-bid :vals))))
 
-;=> (prn (currency-pair-value-all-tstamps c-full-paths))
-
+(defn -main []
 (dorun
-  (map #(print (fmt %)) (into [""] (currency-pairs))))
+  (map #(print (fmt %)) (into [""] (currency-pairs c-save-dir c-date c-fmt-dir c-fmt-fname))))
 
-(doseq [currency-pair-value-tstamp (currency-pair-value-all-tstamps c-full-paths)]
+(doseq [cp-val-tstamp (currency-pair-value-all-tstamps c-save-dir c-date c-fmt-dir c-fmt-fname)]
   (println
-    (dorun (map #(print (fmt %)) (into ["2013-04-19"] currency-pair-value-tstamp)))))
+    (dorun (map #(print (fmt %)) (into ["2013-04-19"] cp-val-tstamp)))))
+  )
 
 ; Wrap java.io.file methods
 (defn is-file? [f] (.isFile f))
@@ -164,7 +148,7 @@
   (let [s-save-date-dir (save-date-dir save-dir date fmt-dir)]
     ;(resp-date-24 date)
     (ensure-directory! s-save-date-dir)
-    (str s-save-date-dir file-sep base-fname "." (tf/unparse fmt-fname date) ".xml")))
+    (str s-save-date-dir c-file-sep base-fname "." (tf/unparse fmt-fname date) ".xml")))
 
 (defn download! [src-uri save-dir fmt-dir fmt-fname base-fname]
   "Dowload file from xml and save it under given name. Side effects!"
@@ -183,8 +167,8 @@
                           base-fname)
     ;dst-uri
     ))
-(defn -main [src-uri save-dir]
-  (download! src-uri save-dir fmt-dir fmt-fname base-fname))
+(defn -mainx [src-uri save-dir]
+  (download! src-uri save-dir c-fmt-dir c-fmt-fname c-base-fname))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
