@@ -15,6 +15,15 @@
     )
   (:gen-class)
   )
+
+; TODO integrate download & analysis to the -main method
+; TODO separate stuff from namespace core to download
+; TODO method younger-than should get a parameter time-interval
+; TODO unit test methods
+; TODO emails
+; TODO algorithms
+; TODO automatic trading
+
 ;;debugging parts of expressions
 (defmacro dbg[x] `(let [x# ~x] (println "dbg:" '~x "=" x#) x#))
 
