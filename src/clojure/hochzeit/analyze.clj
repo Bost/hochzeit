@@ -6,6 +6,7 @@
     )
   (:require
     [clojure.xml :as xml]
+    [clj-time.core :as tco]
     [clojure.zip :as zip]
     [me.raynes.fs :as fs]
     [liberator.util :only [parse-http-date http-date] :as du]
@@ -47,6 +48,9 @@
                 (func path))))))
 
 (def d (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 05:05:04 GMT" )))
+
+(defn resp-date-24 [date]
+  (tco/minus date (tco/hours 1)))
 
 (defn fname-younger-than [formated-date path base-fname]
   "Alphabetically sort files under given path and return fnames youger that formated-date"

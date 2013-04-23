@@ -16,7 +16,7 @@
   (:gen-class)
   )
 
-; TODO integrate download & analysis to the -main method
+; TODO do not use full-paths
 ; TODO separate stuff from namespace core to download
 ; TODO method younger-than should get a parameter time-interval
 ; TODO unit test methods
@@ -38,12 +38,11 @@
                 (System/getProperty "user.home")))
 (def c-save-dir (str c-home-dir c-file-sep "vircurex" c-file-sep))
 (def c-fmt-dir (tf/formatter (str "yyyy" c-file-sep "MM" c-file-sep "dd")))
-(def c-fmt-fname (tf/formatter "yyyy-MM-dd_hh-mm-ss"))
+(def c-fmt-fname (tf/formatter "yyyy-MM-dd_HH-mm-ss"))
 (def c-base-fname "vircurex")
 
 
-
-(def c-date (tce/from-date (du/parse-http-date "Thu, 22 Apr 2013 11:56:00 GMT" )))
+(def c-date (tce/from-date (du/parse-http-date "Thu, 23 Apr 2013 22:51:00 GMT" )))
 ;(def c-date (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 05:05:04 GMT" )))
 ;(def date (tce/from-date (du/parse-http-date "Thu, 15 Apr 2013 11:54:00 GMT" )))
 
@@ -53,11 +52,13 @@
 (defn fname-date [date fmt-fname]
   (str "" (tf/unparse fmt-fname date)))
 
+;(defn full-path [] )
+
 (defn full-paths [save-dir date fmt-dir fmt-fname]
   (let [sdd (save-date-dir save-dir date fmt-dir)]
     (map #(io/file (str sdd %))
          (into []
-               (a/fname-younger-than (fname-date date fmt-fname)
+               (a/fname-younger-than (fname-date (a/resp-date-24 date) fmt-fname)
                                      sdd
                                      c-base-fname)))))
 
@@ -65,7 +66,7 @@
   (into []
         (into #{} ; use hash-set to get rid of duplicates
               ;[:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD]))
-              (reduce into (a/do-func a/currencies (dbg (full-paths save-dir date fmt-dir fmt-fname)))))))
+              (reduce into (a/do-func a/currencies (full-paths save-dir date fmt-dir fmt-fname))))))
 
 ;=> (= combine create-pairs)
 ;true
@@ -82,7 +83,7 @@
         tag-0-1
         v))))
 
-(defn fmt [x] (format "%16s" x))
+(defn fmt [x length] (format (str "%" length "s") x))
 
 (defn get-zipped [fname-xml]
   (zip/xml-zip (xml/parse fname-xml)))
@@ -91,15 +92,6 @@
   (for [zpp (a/do-func get-zipped (full-paths save-dir date fmt-dir fmt-fname))]
     (for [currency-pair (currency-pairs save-dir date fmt-dir fmt-fname)]
       (get-vals zpp currency-pair :highest-bid :vals))))
-
-(defn -main []
-(dorun
-  (map #(print (fmt %)) (into [""] (currency-pairs c-save-dir c-date c-fmt-dir c-fmt-fname))))
-
-(doseq [cp-val-tstamp (currency-pair-value-all-tstamps c-save-dir c-date c-fmt-dir c-fmt-fname)]
-  (println
-    (dorun (map #(print (fmt %)) (into ["2013-04-19"] cp-val-tstamp)))))
-  )
 
 ; Wrap java.io.file methods
 (defn is-file? [f] (.isFile f))
@@ -147,7 +139,7 @@
   (:body http-resp))
 
 (defn resp-date-24 [date]
-  (tco/minus date (tco/hours 24)))
+  (tco/minus date (tco/hours 1)))
 
 (defn resp-date [http-resp]
   (tce/from-date (du/parse-http-date (:date (resp-headers http-resp)))))
@@ -171,13 +163,43 @@
                           date)
         ]
     (spit dst-uri (resp-text http-resp))
-    (a/fname-younger-than date
-                          (save-date-dir save-dir date fmt-dir)
-                          base-fname)
+    date
+    ;(a/fname-younger-than date
+                          ;(save-date-dir save-dir date fmt-dir)
+                          ;base-fname)
     ;dst-uri
     ))
-(defn -mainx [src-uri save-dir]
-  (download! src-uri save-dir c-fmt-dir c-fmt-fname c-base-fname))
+
+(defn fname-tstamp [base-name fname]
+  "Extract timestamp form filename"
+  (subs fname
+        (.length (str base-name "."))
+        (- (.length fname) (.length ".xml"))))
+
+(defn -main [src-uri save-dir]
+  (let [
+        download-date c-date
+        ;download-date (download! src-uri save-dir c-fmt-dir c-fmt-fname c-base-fname)
+        fmt-len 20
+        sdd (save-date-dir save-dir download-date c-fmt-dir)
+        ]
+    (dorun
+      (map #(print (fmt % fmt-len))
+           (into [(fname-date download-date c-fmt-fname)]
+                 (currency-pairs save-dir download-date c-fmt-dir c-fmt-fname))))
+
+    (doseq [cp-val-tstamp (currency-pair-value-all-tstamps save-dir download-date c-fmt-dir c-fmt-fname)
+            ; this is wrong
+            ;fname-younger (a/fname-younger-than (fname-date download-date c-fmt-fname)
+                                                ;sdd
+                                                ;c-base-fname)
+            ]
+      (println
+        (dorun (map #(print (fmt % fmt-len))
+                    (into [(fname-tstamp c-base-fname "vircurex.2013-04-14_04-15-09.xml")]
+                          cp-val-tstamp)))))
+    )
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

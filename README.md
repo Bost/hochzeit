@@ -10,7 +10,7 @@ crontab -e
 
 ```
 # Run every 5 minutes
-*/5 * * * * java -cp ~/hochzeit-0.1.1-SNAPSHOT-standalone.jar hochzeit.download https://vircurex.com/api/get_info_for_currency.xml ~/vircurex/
+*/5 * * * * java -cp ~/hochzeit-0.1.2-SNAPSHOT-standalone.jar hochzeit.core https://vircurex.com/api/get_info_for_currency.xml ~/vircurex/
 ```
 
 ```
