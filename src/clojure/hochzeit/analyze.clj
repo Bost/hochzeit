@@ -15,6 +15,9 @@
   (:gen-class)
   )
 
+;;debugging parts of expressions
+(defmacro dbg[x] `(let [x# ~x] (println "dbg:" '~x "=" x#) x#))
+
 
 (defn kids [fname-xml]
   "Children below the top most tag"
