@@ -14,7 +14,7 @@
     )
   )
 
-(def downloaded-files (c/-main c/src-uri c/save-dir))
+(def downloaded-files (c/-main c/c-src-uri c/c-save-dir))
 (prn "downloaded-files: " downloaded-files)
 
 (defn file-size [fpath]
