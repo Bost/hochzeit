@@ -16,9 +16,7 @@
   (:gen-class)
   )
 
-; TODO do not use full-paths
 ; TODO separate stuff from namespace core to download
-; TODO method younger-than should get a parameter time-interval
 ; TODO unit test methods
 ; TODO emails
 ; TODO algorithms
@@ -31,6 +29,8 @@
 (def c-src-uri "https://vircurex.com/api/get_info_for_currency.xml")
 
 (def c-file-sep (System/getProperty "file.separator"))
+; file.separator is not detected properly for cygwin
+;(def c-file-sep "/")
 (def c-os-name (System/getProperty "os.name"))
 (def c-home-dir (if (= c-os-name "Windows 7")
                 (str "C:" c-file-sep "cygwin" c-file-sep "home" c-file-sep
@@ -42,7 +42,8 @@
 (def c-base-fname "vircurex")
 
 
-(def c-date (tce/from-date (du/parse-http-date "Thu, 23 Apr 2013 22:51:00 GMT" )))
+;(def c-date (tce/from-date (du/parse-http-date "Thu, 23 Apr 2013 22:51:00 GMT" )))
+(def c-date (tce/from-date (du/parse-http-date "Thu, 22 Apr 2013 10:00:04 GMT" )))
 ;(def c-date (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 05:05:04 GMT" )))
 ;(def date (tce/from-date (du/parse-http-date "Thu, 15 Apr 2013 11:54:00 GMT" )))
 
@@ -63,15 +64,18 @@
                                      c-base-fname)))))
 
 (defn all-currencies [save-dir date fmt-dir fmt-fname]
-  (into []
-        (into #{} ; use hash-set to get rid of duplicates
-              ;[:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD]))
-              (reduce into (a/do-func a/currencies (full-paths save-dir date fmt-dir fmt-fname))))))
+  ;[:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD])
+  (let [cur (a/do-func a/currencies (full-paths save-dir date fmt-dir fmt-fname))]
+    (if (empty? cur )
+      []
+      (into []
+            (into #{} ; use hash-set to get rid of duplicates
+                  (reduce into cur))))))
 
 ;=> (= combine create-pairs)
 ;true
 (defn currency-pairs [save-dir date fmt-dir fmt-fname]
- ;([[:EUR :BTC] [:PPC :USD]]))
+ ;[[:EUR :BTC] [:PPC :USD]])
   (a/combine (all-currencies save-dir date fmt-dir fmt-fname)))
 
 (defn get-vals [ zpp tag-0-1 tag-2 out-type]
@@ -88,7 +92,7 @@
 (defn get-zipped [fname-xml]
   (zip/xml-zip (xml/parse fname-xml)))
 
-(defn currency-pair-value-all-tstamps [save-dir date fmt-dir fmt-fname]
+(defn currency-pair-values-for-all-tstamps [save-dir date fmt-dir fmt-fname]
   (for [zpp (a/do-func get-zipped (full-paths save-dir date fmt-dir fmt-fname))]
     (for [currency-pair (currency-pairs save-dir date fmt-dir fmt-fname)]
       (get-vals zpp currency-pair :highest-bid :vals))))
@@ -176,30 +180,41 @@
         (.length (str base-name "."))
         (- (.length fname) (.length ".xml"))))
 
-(defn -main [src-uri save-dir]
-  (let [
-        download-date c-date
-        ;download-date (download! src-uri save-dir c-fmt-dir c-fmt-fname c-base-fname)
+(defn fix-dir-name [unfixed-dir-name]
+  (if (.endsWith unfixed-dir-name c-file-sep)
+    unfixed-dir-name
+    (str unfixed-dir-name c-file-sep)))
+
+(defn -main [src-uri save-dir-unfixed]
+  "save-dir-unfixed - means add a file.separator at the end if there isn't any"
+  (let [save-dir (fix-dir-name save-dir-unfixed)
+        ;download-date c-date
+        download-date (download! src-uri save-dir c-fmt-dir c-fmt-fname c-base-fname)
         fmt-len 20
         sdd (save-date-dir save-dir download-date c-fmt-dir)
         ]
-    (dorun
-      (map #(print (fmt % fmt-len))
-           (into [(fname-date download-date c-fmt-fname)]
-                 (currency-pairs save-dir download-date c-fmt-dir c-fmt-fname))))
+    (println ; print header
+             (dorun
+               (map #(print (fmt % fmt-len))
+                    (into [(fname-date download-date c-fmt-fname)]
+                          (currency-pairs save-dir download-date c-fmt-dir c-fmt-fname)))))
 
-    (doseq [cp-val-tstamp (currency-pair-value-all-tstamps save-dir download-date c-fmt-dir c-fmt-fname)
-            ; this is wrong
-            ;fname-younger (a/fname-younger-than (fname-date download-date c-fmt-fname)
-                                                ;sdd
-                                                ;c-base-fname)
-            ]
-      (println
-        (dorun (map #(print (fmt % fmt-len))
-                    (into [(fname-tstamp c-base-fname "vircurex.2013-04-14_04-15-09.xml")]
-                          cp-val-tstamp)))))
-    )
-  )
+    (let [cpv-all-tstamps (currency-pair-values-for-all-tstamps save-dir
+                                                                download-date
+                                                                c-fmt-dir
+                                                                c-fmt-fname)
+          tstamps (into []
+                        (a/fname-younger-than (fname-date (a/resp-date-24 download-date) c-fmt-fname)
+                                              sdd
+                                              c-base-fname))
+          tstamp-cp-values (map vector tstamps cpv-all-tstamps)
+          ]
+      (doseq [tstamp-values tstamp-cp-values ]
+        (println
+          (dorun (map #(print (fmt % fmt-len))
+                      (into [(fname-tstamp c-base-fname
+                                           (first tstamp-values))]
+                            (second tstamp-values)))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
