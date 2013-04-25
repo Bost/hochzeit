@@ -1,4 +1,5 @@
-(defproject hochzeit "0.1.2-SNAPSHOT"
+(defproject
+  hochzeit "0.1.2-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -11,10 +12,10 @@
                  [org.clojure/clojure "1.5.1"]
                  ;[clojurewerkz/money "1.2.0"]
                  [org.clojure/data.zip "0.1.1"]
+                 [com.taoensso/timbre "1.6.0"]
                  ]
   :source-paths      ["src/clojure"]
   :resource-paths    ["src/resources"]
 
   :main hochzeit.core
   )
-

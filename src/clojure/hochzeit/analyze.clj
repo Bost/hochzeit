@@ -21,13 +21,14 @@
 
 (defn kids [fname-xml]
   "Children below the top most tag"
-  (first (:content 
+  (first (:content
            (first (xml1-> (zip/xml-zip (xml/parse fname-xml)))))))
 
 (defn currencies [fname-xml]
-  (into [] (cons (:tag (kids fname-xml))
-                 (for [c (:content (kids fname-xml))] 
-                   (:tag c)))))
+  (let [kids-of (kids fname-xml)]
+    (into [] (cons (:tag kids-of)
+                   (for [c (:content kids-of)]
+                     (:tag c))))))
 
 ;(def hs-currencies (into #{} (reduce into (analyze/do-parse files analyze/currencies))))
 ;;=> (println "hs-currencies: " hs-currencies)
@@ -55,13 +56,14 @@
 (defn resp-date-24 [date]
   (tco/minus date (tco/hours 1)))
 
-(defn fname-younger-than [formated-date path base-fname]
+(defn fnames-younger-than [formated-date path base-fname]
   "Alphabetically sort files under given path and return fnames youger that formated-date"
   (remove nil?
           (for [f (sort (fs/list-dir path))]
             (if (<= (compare (str base-fname "." formated-date ".xml") f) 0)
               f
               nil))))
+
 ; TODO see https://github.com/nathell/clj-tagsoup
 ; TODO see https://github.com/cgrand/enlive
 ; TODO Schejulure
