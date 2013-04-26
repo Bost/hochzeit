@@ -66,30 +66,36 @@
 
 (defn fnames-between [date-from path-from date-to path-to]
   "Alphabetically sort files under path and return fnames youger that formated-date"
-  ["/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_07-50-03.xml"
-   "/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_09-40-05.xml"
-   "/home/bambi/vircurex/2013/04/18/vircurex.2013-04-18_11-40-04.xml"
-   "/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_12-50-04.xml"
-   "/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_12-55-04.xml"])
-  ;(let [
-        ;formated-date-from (fname-date date-from)
-        ;formated-date-to   (fname-date date-to)
-        ;fname-from (fname formated-date-from)
-        ;fname-to   (fname formated-date-to)
-        ;dates-between (formated-dates-between date-from date-to)
-        ;]
-    ;(dbg
-      ;(into []
-            ;; TODO remove nil? could be done inside the for-loop
-            ;(for [path-between dates-between]
-                               ;;["/home/bambi/vircurex/2013/04/19"]]
-              ;(remove nil?
-                      ;(for [f (sort (fs/list-dir (dbg (str c-save-dir path-between))))]
-                        ;(let [sf (str f)]
-                          ;(if (and (<= (compare fname-from sf) 0)
-                                   ;(<= (compare sf   fname-to) 0))
-                            ;f
-                            ;nil)))))))))
+  ;["/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_07-50-03.xml"
+   ;"/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_09-40-05.xml"
+   ;"/home/bambi/vircurex/2013/04/18/vircurex.2013-04-18_11-40-04.xml"
+   ;"/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_12-50-04.xml"
+   ;"/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_12-55-04.xml"])
+  (let [
+        formated-date-from (fname-date date-from)
+        formated-date-to   (fname-date date-to)
+        fname-from         (fname formated-date-from)
+        fname-to           (fname formated-date-to)
+        dates-between      (formated-dates-between date-from date-to)
+        ]
+    (dbg
+      (into []
+            ; TODO remove nil? could be done inside the for-loop
+            (for [path-between dates-between]
+                               ;["/home/bambi/vircurex/2013/04/19"]]
+              (remove nil?
+                      (for [f (sort (fs/list-dir (dbg (str c-save-dir path-between))))]
+                        (let [sf (str f)]
+                          (if (and (<= (compare fname-from sf      ) 0)
+                                   (<= (compare sf         fname-to) 0))
+                            f
+                            nil)))))))))
+
+(def c-from (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 00:00:00 GMT")))
+(def c-to (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 00:00:00 GMT")))
+
+(fnames-between c-from "" c-to "")
+
 (comment
   (fs/list-dir "/home/bambi/vircurex/2013/04/19")
 )
