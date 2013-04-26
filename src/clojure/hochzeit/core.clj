@@ -32,7 +32,7 @@
                   (System/getProperty "user.home")))
 (def c-str-fmt-name "yyyy-MM-dd_HH-mm-ss")
 (def c-fmt-fname (tf/formatter c-str-fmt-name))
-(def c-base-fname "vircurex")
+(def c-base-fname a/c-base-fname)
 (def c-fmt-len (+ (.length c-str-fmt-name) 2))
 (def c-date (tce/from-date (du/parse-http-date
                             ;"Thu, 23 Apr 2013 22:51:00 GMT")))
@@ -41,8 +41,6 @@
                             ;"Thu, 23 Apr 2013 10:00:04 GMT")))
 
 (defn fname-date [date] (str "" (tf/unparse c-fmt-fname date)))
-; TODO change fn resp-date-24 to 24 hours
-(defn resp-date-24 [date] (tco/minus date (tco/hours 1)))
 
 (defn full-paths [save-dir date files]
   (let [sdd (d/save-date-dir save-dir date)]
@@ -54,13 +52,14 @@
     (if (empty? cur )
       []
       (into []
-            (into #{} ; use hash-set to get rid of duplicates
+            (into #{} ;hash-set filters out the duplicates
                   (reduce into cur))))))
 
 ;=> (= combine create-pairs)
 ;true
 (defn currency-pairs [save-dir date files]
- ;[[:EUR :BTC] [:PPC :USD]])
+  ;[[:EUR :BTC]])
+  ;[[:EUR :BTC] [:PPC :USD]])
   (a/combine (all-currencies save-dir date files)))
 
 (defn get-vals [ zpp tag-0-1 tag-2 out-type]
@@ -118,22 +117,21 @@
                     (into [(fname-tstamp (first tstamp-values))]
                           (second tstamp-values)))))))
 
-(defn fnames-younger-than [download-date save-dir]
-  (into [] (a/fnames-younger-than
-             (fname-date (resp-date-24 download-date))
-             (d/save-date-dir save-dir download-date)
-             c-base-fname)))
+(defn fnames-between [date-from date-to save-dir]
+  (a/fnames-between (fname-date date-from)
+                    (fname-date date-to)
+                    (d/save-date-dir save-dir date-from)))
 
 (defn analyze! [download-date save-dir-unfixed]
   "save-dir-unfixed - means add a file.separator at the end if there isn't any"
   (let [save-dir (d/fix-dir-name save-dir-unfixed)
-        younger-files (fnames-younger-than download-date save-dir)
-        cur-pairs (currency-pairs save-dir download-date younger-files)
+        files-to-analyze (fnames-between (a/resp-date-24 download-date) download-date save-dir)
+        cur-pairs (currency-pairs save-dir download-date files-to-analyze)
         cpv-all-tstamps (currency-pair-values-for-all-tstamps save-dir
                                                               download-date
-                                                              younger-files
+                                                              files-to-analyze
                                                               cur-pairs)
-        tstamp-cp-values (map vector younger-files cpv-all-tstamps)]
+        tstamp-cp-values (map vector files-to-analyze cpv-all-tstamps)]
     (print-header! download-date cur-pairs)
     (print-table! tstamp-cp-values)))
 
@@ -154,7 +152,7 @@
        ;;[download-date c-date]
     ;(analyze! download-date save-dir-unfixed)))
 
-;(analyze! c-date c-save-dir)
+(analyze! c-date c-save-dir)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

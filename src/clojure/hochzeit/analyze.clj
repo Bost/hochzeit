@@ -46,18 +46,25 @@
 
 (def d (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 05:05:04 GMT" )))
 
-(defn resp-date-24 [date]
-  (tco/minus date (tco/hours 1)))
+; TODO change fn resp-date-24 to 24 hours
+(defn resp-date-24 [date] (tco/minus date (tco/minutes 10)))
 
-(defn fnames-younger-than [formated-date path base-fname]
-  "Alphabetically sort files under given path and return fnames youger that formated-date"
-  (into []
-        ; TODO remove nil? could be done inside the for-loop
-        (remove nil?
-                (for [f (sort (fs/list-dir path))]
-                  (if (<= (compare (str base-fname "." formated-date ".xml") f) 0)
-                    f
-                    nil)))))
+(def c-base-fname "vircurex")
+(defn fname [formated-date] (str c-base-fname "." formated-date ".xml"))
+
+(defn fnames-between [formated-date-from formated-date-to path]
+  "Alphabetically sort files under path and return fnames youger that formated-date"
+  (let [fname-from (fname formated-date-from)
+        fname-to   (fname formated-date-to)]
+    (into []
+          ; TODO remove nil? could be done inside the for-loop
+          (remove nil?
+                  (for [f (sort (fs/list-dir path))]
+                    (let [sf (str f)]
+                        (if (and (<= (compare fname-from sf) 0)
+                                 (<= (compare sf   fname-to) 0))
+                          f
+                          nil)))))))
 
 ; TODO see https://github.com/nathell/clj-tagsoup
 ; TODO see https://github.com/cgrand/enlive
