@@ -1,23 +1,16 @@
 (ns hochzeit.analyze
-  (:use
-    [clojure.xml]
-    [clojure.java.io]
-    [clojure.data.zip.xml]
-    )
-  (:require
-    [clojure.xml :as xml]
-    [clj-time.core :as tco]
-    [clojure.zip :as zip]
-    [me.raynes.fs :as fs]
-    [liberator.util :only [parse-http-date http-date] :as du]
-    [clj-time.coerce :as tce]
-    )
-  (:gen-class)
-  )
+  (:use [clojure.xml]
+        [clojure.java.io]
+        [clojure.data.zip.xml])
+  (:require [clojure.xml :as xml]
+            [clj-time.core :as tco]
+            [clojure.zip :as zip]
+            [me.raynes.fs :as fs]
+            [liberator.util :only [parse-http-date http-date] :as du]
+            [clj-time.coerce :as tce])
+  (:gen-class))
 
-;;debugging parts of expressions
 (defmacro dbg[x] `(let [x# ~x] (println "dbg:" '~x "=" x#) x#))
-
 
 (defn kids [fname-xml]
   "Children below the top most tag"
@@ -58,11 +51,13 @@
 
 (defn fnames-younger-than [formated-date path base-fname]
   "Alphabetically sort files under given path and return fnames youger that formated-date"
-  (remove nil?
-          (for [f (sort (fs/list-dir path))]
-            (if (<= (compare (str base-fname "." formated-date ".xml") f) 0)
-              f
-              nil))))
+  (into []
+        ; TODO remove nil? could be done inside the for-loop
+        (remove nil?
+                (for [f (sort (fs/list-dir path))]
+                  (if (<= (compare (str base-fname "." formated-date ".xml") f) 0)
+                    f
+                    nil)))))
 
 ; TODO see https://github.com/nathell/clj-tagsoup
 ; TODO see https://github.com/cgrand/enlive

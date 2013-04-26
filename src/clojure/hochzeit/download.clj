@@ -1,17 +1,21 @@
 (ns hochzeit.download
-  (:require
-    [clj-time.coerce :as tce]
-    [clj-time.format :as tf]
-    [clj-http.client :as cli]
-    [clojure.java.io :as io]
-    [liberator.util :only [parse-http-date http-date] :as du]
-    ))
+  (:require [clj-time.coerce :as tce]
+            [clj-time.format :as tf]
+            [clj-http.client :as cli]
+            [clojure.java.io :as io]
+            [liberator.util :only [parse-http-date http-date] :as du]))
 
-;;debugging parts of expressions
 (defmacro dbg [x] `(let [x# ~x] (println (str *ns* ": dbg:") '~x "=" x#) x#))
 
-(defn save-date-dir [save-dir date fmt-dir file-sep]
-  (str save-dir (tf/unparse fmt-dir date) file-sep))
+(def c-fsep (System/getProperty "file.separator"))
+;(def c-fsep "/") ; file.separator is not detected properly for cygwin
+(def c-fmt-dir (tf/formatter (str "yyyy" c-fsep "MM" c-fsep "dd")))
+(def c-str-fmt-name "yyyy-MM-dd_HH-mm-ss")
+(def c-fmt-fname (tf/formatter c-str-fmt-name))
+(def c-base-fname "vircurex")
+
+(defn save-date-dir [save-dir date]
+  (str save-dir (tf/unparse c-fmt-dir date) c-fsep))
 
 ; Wrap java.io.file methods
 (defn exists? [f] (.exists f))
@@ -41,28 +45,24 @@
 (defn resp-date [http-resp]
   (tce/from-date (du/parse-http-date (:date (resp-headers http-resp)))))
 
-(defn dst-uri! [save-dir fmt-dir fmt-fname file-sep base-fname date]
+(defn dst-uri! [save-dir date]
   "Create destination uri and ensure the directory structure exists. Side effects!"
-  (let [s-save-date-dir (save-date-dir save-dir date fmt-dir file-sep)]
+  (let [s-save-date-dir (save-date-dir save-dir date c-fmt-dir)]
     (ensure-directory! s-save-date-dir)
-    (str s-save-date-dir file-sep base-fname "." (tf/unparse fmt-fname date) ".xml")))
+    (str s-save-date-dir c-fsep c-base-fname "." (tf/unparse c-fmt-fname date) ".xml")))
 
-(defn download! [src-uri save-dir fmt-dir file-sep fmt-fname base-fname]
+(defn download! [src-uri save-dir]
   "Dowload file from xml and save it under given name. Side effects!"
   (let [ http-resp (cli/get src-uri
                                {:decode-body-headers true :as :auto})
         date (resp-date http-resp)
         dst-uri (dst-uri! save-dir
-                          fmt-dir
-                          fmt-fname
-                          file-sep
-                          base-fname
                           date)
         ]
     (spit dst-uri (resp-text http-resp))
     date))
 
-(defn fix-dir-name [unfixed-dir-name file-sep]
-  (if (.endsWith unfixed-dir-name file-sep)
+(defn fix-dir-name [unfixed-dir-name]
+  (if (.endsWith unfixed-dir-name c-fsep)
     unfixed-dir-name
-    (str unfixed-dir-name file-sep)))
+    (str unfixed-dir-name c-fsep)))
