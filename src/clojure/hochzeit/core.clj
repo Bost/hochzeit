@@ -45,9 +45,9 @@
 
 (def c-date (tce/from-date (du/parse-http-date
                             ;"Thu, 23 Apr 2013 22:51:00 GMT")))
-                            ;"Thu, 19 Apr 2013 05:05:04 GMT")))
+                            "Thu, 19 Apr 2013 05:05:04 GMT")))
                             ;"Thu, 15 Apr 2013 11:54:00 GMT")))
-                             "Thu, 22 Apr 2013 10:00:04 GMT")))
+                            ;"Thu, 23 Apr 2013 10:00:04 GMT")))
 
 (defn fname-date [date fmt-fname]
   (str "" (tf/unparse fmt-fname date)))
@@ -116,11 +116,9 @@
         (.length (str base-name "."))
         (- (.length fname) (.length ".xml"))))
 
-(defn download-and-print-table! [src-uri save-dir-unfixed]
+(defn analyze! [download-date save-dir-unfixed]
   "save-dir-unfixed - means add a file.separator at the end if there isn't any"
   (let [save-dir (d/fix-dir-name save-dir-unfixed c-file-sep)
-        ;download-date c-date
-        download-date (d/download! src-uri save-dir c-fmt-dir c-file-sep c-fmt-fname c-base-fname)
         fmt-len 20
         sdd (d/save-date-dir save-dir download-date c-fmt-dir c-file-sep)
         younger-files (into [] (a/fnames-younger-than
@@ -134,8 +132,7 @@
                                                               c-fmt-fname
                                                               younger-files
                                                               cur-pairs)
-        tstamp-cp-values (map vector younger-files cpv-all-tstamps)
-        ]
+        tstamp-cp-values (map vector younger-files cpv-all-tstamps)]
     (println ; print header
              (dorun
                (map #(print (fmt % fmt-len))
@@ -147,18 +144,22 @@
                     (into [(fname-tstamp c-base-fname
                                          (first tstamp-values))]
                           (second tstamp-values))))))))
-;(defn -main []
-  ;(profile :info :Arithmetic
-           ;(download-print-table! "https://vircurex.com/api/get_info_for_currency.xml"
-                                  ;"/home/bost/vircurex/")))
 
-(defn download-only! [src-uri save-dir-unfixed]
+(defn download! [src-uri save-dir-unfixed]
   (let [save-dir (d/fix-dir-name save-dir-unfixed c-file-sep)]
     (d/download! src-uri save-dir c-fmt-dir c-file-sep c-fmt-fname c-base-fname)))
 
 (defn -main [src-uri save-dir-unfixed]
-  (download-and-print-table! src-uri save-dir-unfixed))
-  ;(download-only! src-uri save-dir-unfixed))
+  (let [download-date (download! src-uri save-dir-unfixed)]
+       ;[download-date c-date]
+    (analyze! download-date save-dir-unfixed)))
+
+;(defn -main []
+  ;(profile :info :Arithmetic
+           ;(analyze! "https://vircurex.com/api/get_info_for_currency.xml"
+                     ;"/home/bost/vircurex/")))
+
+(analyze! c-date c-save-dir)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
