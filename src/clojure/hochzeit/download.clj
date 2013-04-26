@@ -5,9 +5,16 @@
             [clojure.java.io :as io]
             [liberator.util :only [parse-http-date http-date] :as du]))
 
-(defmacro dbg [x] `(let [x# ~x] (println (str *ns* ": dbg:") '~x "=" x#) x#))
+(defmacro dbg [x] `(let [x# ~x] (println "download.dbg:" '~x "=" x#) x#))
 
-(def c-fsep (System/getProperty "file.separator"))
+(def c-fsep    (System/getProperty "file.separator"))
+(def c-os-name (System/getProperty "os.name"))
+; TODO take a look at if-let
+(def c-home-dir (if (= c-os-name "Windows 7")
+                  (str "C:" c-fsep "cygwin" c-fsep "home" c-fsep
+                       (System/getProperty "user.name"))
+                  (System/getProperty "user.home")))
+(def c-save-dir (str c-home-dir c-fsep "vircurex" c-fsep))
 ;(def c-fsep "/") ; file.separator is not detected properly for cygwin
 (def c-fmt-dir (tf/formatter (str "yyyy" c-fsep "MM" c-fsep "dd")))
 (def c-str-fmt-name "yyyy-MM-dd_HH-mm-ss")
@@ -15,7 +22,7 @@
 (def c-base-fname "vircurex")
 
 (defn save-date-dir [save-dir date]
-  (str save-dir (tf/unparse c-fmt-dir date) c-fsep))
+  (str save-dir (dbg (tf/unparse c-fmt-dir (dbg date))) c-fsep))
 
 ; Wrap java.io.file methods
 (defn exists? [f] (.exists f))
@@ -47,7 +54,7 @@
 
 (defn dst-uri! [save-dir date]
   "Create destination uri and ensure the directory structure exists. Side effects!"
-  (let [s-save-date-dir (save-date-dir save-dir date c-fmt-dir)]
+  (let [s-save-date-dir (save-date-dir save-dir date)]
     (ensure-directory! s-save-date-dir)
     (str s-save-date-dir c-fsep c-base-fname "." (tf/unparse c-fmt-fname date) ".xml")))
 

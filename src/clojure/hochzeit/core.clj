@@ -19,48 +19,40 @@
 ; TODO automatic trading
 
 ;;debugging parts of expressions
-(defmacro dbg [x] `(let [x# ~x] (println (str *ns* ": dbg:") '~x "=" x#) x#))
+(defmacro dbg [x] `(let [x# ~x] (println "core.dbg:" '~x "=" x#) x#))
 
 ;(def c-fsep (System/getProperty "file.separator"))
 (def c-fsep d/c-fsep)
 
-(def c-os-name (System/getProperty "os.name"))
-; TODO take a look at if-let
-(def c-home-dir (if (= c-os-name "Windows 7")
-                  (str "C:" c-fsep "cygwin" c-fsep "home" c-fsep
-                       (System/getProperty "user.name"))
-                  (System/getProperty "user.home")))
-(def c-str-fmt-name "yyyy-MM-dd_HH-mm-ss")
-(def c-fmt-fname (tf/formatter c-str-fmt-name))
-(def c-base-fname a/c-base-fname)
+(def c-str-fmt-name d/c-str-fmt-name)
+(def c-fmt-fname    d/c-fmt-fname)
+(def c-base-fname   d/c-base-fname)
 (def c-fmt-len (+ (.length c-str-fmt-name) 2))
 (def c-date (tce/from-date (du/parse-http-date
                             ;"Thu, 23 Apr 2013 22:51:00 GMT")))
-                            "Thu, 19 Apr 2013 05:05:04 GMT")))
+                            ;"Thu, 19 Apr 2013 05:05:04 GMT")))
+                            "Thu, 19 Apr 2013 00:00:00 GMT")))
                             ;"Thu, 15 Apr 2013 11:54:00 GMT")))
                             ;"Thu, 23 Apr 2013 10:00:04 GMT")))
 
-(defn fname-date [date] (str "" (tf/unparse c-fmt-fname date)))
-
-(defn full-paths [save-dir date files]
-  (let [sdd (d/save-date-dir save-dir date)]
-    (map #(io/file (str sdd %)) files)))
+(defn full-paths [files]
+  (map io/file files))
 
 (defn all-currencies [save-dir date files]
-  ;[:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD])
-  (let [cur (a/do-func a/currencies (full-paths save-dir date files))]
-    (if (empty? cur )
-      []
-      (into []
-            (into #{} ;hash-set filters out the duplicates
-                  (reduce into cur))))))
+  [:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD])
+  ;(let [cur (a/do-func a/currencies (full-paths files))]
+    ;(if (empty? cur )
+      ;[]
+      ;(into []
+            ;(into #{} ;hash-set filters out the duplicates
+                  ;(reduce into cur))))))
 
 ;=> (= combine create-pairs)
 ;true
 (defn currency-pairs [save-dir date files]
-  ;[[:EUR :BTC]])
+  [[:EUR :BTC]])
   ;[[:EUR :BTC] [:PPC :USD]])
-  (a/combine (all-currencies save-dir date files)))
+  ;(a/combine (all-currencies save-dir date files)))
 
 (defn get-vals [ zpp tag-0-1 tag-2 out-type]
   "get rid of the (if ...)'s to gain speed"
@@ -77,7 +69,7 @@
   (zip/xml-zip (xml/parse fname-xml)))
 
 (defn currency-pair-values-for-all-tstamps [save-dir date files cur-pairs]
-  (for [zpp (a/do-func get-zipped (full-paths save-dir date files))]
+  (for [zpp (a/do-func get-zipped (full-paths files))]
     (for [currency-pair cur-pairs]
       (get-vals zpp currency-pair :highest-bid :vals))))
 
@@ -108,7 +100,7 @@
   (println
     (dorun
       (map #(print (fmt %))
-           (into [(fname-date download-date)] currency-pairs)))))
+           (into [(a/fname-date download-date)] currency-pairs)))))
 
 (defn print-table! [tstamp-cp-values]
   (doseq [tstamp-values tstamp-cp-values]
@@ -118,20 +110,27 @@
                           (second tstamp-values)))))))
 
 (defn fnames-between [date-from date-to save-dir]
-  (a/fnames-between (fname-date date-from)
-                    (fname-date date-to)
-                    (d/save-date-dir save-dir date-from)))
+  (a/fnames-between date-from
+                    (d/save-date-dir save-dir date-from)
+                    date-to
+                    (d/save-date-dir save-dir date-to)))
+
+(defn basename [filepath]
+  (.substring filepath
+             (- (.length filepath) (+ (.length c-base-fname) (.length c-str-fmt-name) 2 3 ))
+             (.length filepath)))
 
 (defn analyze! [download-date save-dir-unfixed]
   "save-dir-unfixed - means add a file.separator at the end if there isn't any"
   (let [save-dir (d/fix-dir-name save-dir-unfixed)
-        files-to-analyze (fnames-between (a/resp-date-24 download-date) download-date save-dir)
+        files-to-analyze (fnames-between (a/past-date download-date) download-date save-dir)
         cur-pairs (currency-pairs save-dir download-date files-to-analyze)
         cpv-all-tstamps (currency-pair-values-for-all-tstamps save-dir
                                                               download-date
                                                               files-to-analyze
                                                               cur-pairs)
-        tstamp-cp-values (map vector files-to-analyze cpv-all-tstamps)]
+        base-file-names (map basename files-to-analyze)
+        tstamp-cp-values (map vector base-file-names cpv-all-tstamps)]
     (print-header! download-date cur-pairs)
     (print-table! tstamp-cp-values)))
 
@@ -139,20 +138,19 @@
   (let [save-dir (d/fix-dir-name save-dir-unfixed)]
     (d/download! src-uri save-dir)))
 
-(def c-save-dir (str c-home-dir c-fsep "vircurex" c-fsep))
 (def c-src-uri "http://google.com")
               ;"https://vircurex.com/api/get_info_for_currency.xml")
 
 (defn -main []
   ;(profile :info :Arithmetic (analyze! c-src-uri c-save-dir)))
-  (analyze! c-date c-save-dir))
+  (analyze! c-date d/c-save-dir))
 
 ;(defn -main [src-uri save-dir-unfixed]
   ;(let [download-date (download! src-uri save-dir-unfixed)]
        ;;[download-date c-date]
     ;(analyze! download-date save-dir-unfixed)))
 
-(analyze! c-date c-save-dir)
+(analyze! c-date d/c-save-dir)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

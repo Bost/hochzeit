@@ -1,7 +1,13 @@
-;(ns hochzeit.core-test
-  ;(:use [clojure.test]
+(ns hochzeit.core-test
+  (:use [clojure.test]
         ;[hochzeit.money :as hm]
-        ;))
+        [hochzeit.core :as c]))
+
+(deftest a-test
+  (testing "File system utilities"
+    (is (= (c/basename "/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_07-50-03.xml")
+           "vircurex.2013-04-19_07-50-03.xml"))))
+
 
 ;(deftest a-test
   ;(testing "Vector of two currencies"

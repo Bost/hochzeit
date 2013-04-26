@@ -3,14 +3,21 @@
         [clojure.java.io]
         [clojure.data.zip.xml])
   (:require [clojure.xml :as xml]
+            [hochzeit.download :as d]
             [clj-time.core :as tco]
             [clojure.zip :as zip]
             [me.raynes.fs :as fs]
             [liberator.util :only [parse-http-date http-date] :as du]
+            [clj-time.format :as tf]
             [clj-time.coerce :as tce])
   (:gen-class))
 
-(defmacro dbg[x] `(let [x# ~x] (println "dbg:" '~x "=" x#) x#))
+(def c-fsep         d/c-fsep)
+(def c-save-dir     d/c-save-dir)
+(def c-str-fmt-name d/c-str-fmt-name)
+(def c-fmt-fname    (tf/formatter c-str-fmt-name))
+
+(defmacro dbg[x] `(let [x# ~x] (println "analyze.dbg:" '~x "=" x#) x#))
 
 (defn kids [fname-xml]
   "Children below the top most tag"
@@ -46,26 +53,46 @@
 
 (def d (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 05:05:04 GMT" )))
 
-; TODO change fn resp-date-24 to 24 hours
-(defn resp-date-24 [date] (tco/minus date (tco/minutes 10)))
+; TODO change fn past-date to 24 hours
+(defn past-date [date] (tco/minus date (tco/hours 1)))
 
 (def c-base-fname "vircurex")
 (defn fname [formated-date] (str c-base-fname "." formated-date ".xml"))
 
-(defn fnames-between [formated-date-from formated-date-to path]
-  "Alphabetically sort files under path and return fnames youger that formated-date"
-  (let [fname-from (fname formated-date-from)
-        fname-to   (fname formated-date-to)]
-    (into []
-          ; TODO remove nil? could be done inside the for-loop
-          (remove nil?
-                  (for [f (sort (fs/list-dir path))]
-                    (let [sf (str f)]
-                        (if (and (<= (compare fname-from sf) 0)
-                                 (<= (compare sf   fname-to) 0))
-                          f
-                          nil)))))))
+(defn fname-date [date] (str "" (tf/unparse c-fmt-fname date)))
 
+(defn formated-dates-between [date-from date-to]
+  ["2013/04/19"])
+
+(defn fnames-between [date-from path-from date-to path-to]
+  "Alphabetically sort files under path and return fnames youger that formated-date"
+  ["/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_07-50-03.xml"
+   "/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_09-40-05.xml"
+   "/home/bambi/vircurex/2013/04/18/vircurex.2013-04-18_11-40-04.xml"
+   "/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_12-50-04.xml"
+   "/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_12-55-04.xml"])
+  ;(let [
+        ;formated-date-from (fname-date date-from)
+        ;formated-date-to   (fname-date date-to)
+        ;fname-from (fname formated-date-from)
+        ;fname-to   (fname formated-date-to)
+        ;dates-between (formated-dates-between date-from date-to)
+        ;]
+    ;(dbg
+      ;(into []
+            ;; TODO remove nil? could be done inside the for-loop
+            ;(for [path-between dates-between]
+                               ;;["/home/bambi/vircurex/2013/04/19"]]
+              ;(remove nil?
+                      ;(for [f (sort (fs/list-dir (dbg (str c-save-dir path-between))))]
+                        ;(let [sf (str f)]
+                          ;(if (and (<= (compare fname-from sf) 0)
+                                   ;(<= (compare sf   fname-to) 0))
+                            ;f
+                            ;nil)))))))))
+(comment
+  (fs/list-dir "/home/bambi/vircurex/2013/04/19")
+)
 ; TODO see https://github.com/nathell/clj-tagsoup
 ; TODO see https://github.com/cgrand/enlive
 ; TODO Schejulure
