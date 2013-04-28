@@ -33,20 +33,20 @@
   (map io/file files))
 
 (defn all-currencies [save-dir date files]
-  [:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD])
-  ;(let [cur (a/do-func a/currencies (full-paths files))]
-    ;(if (empty? cur )
-      ;[]
-      ;(into []
-            ;(into #{} ;hash-set filters out the duplicates
-                  ;(reduce into cur))))))
+  ;[:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD])
+  (let [cur (a/do-func a/currencies (full-paths files))]
+    (if (empty? cur )
+      []
+      (into []
+            (into #{} ;hash-set filters out the duplicates
+                  (reduce into cur))))))
 
 ;=> (= combine create-pairs)
 ;true
 (defn currency-pairs [save-dir date files]
-  [[:EUR :BTC]])
+  ;[[:EUR :BTC]])
   ;[[:EUR :BTC] [:PPC :USD]])
-  ;(a/combine (all-currencies save-dir date files)))
+  (a/combine (all-currencies save-dir date files)))
 
 (defn get-vals [ zpp tag-0-1 tag-2 out-type]
   "get rid of the (if ...)'s to gain speed"
