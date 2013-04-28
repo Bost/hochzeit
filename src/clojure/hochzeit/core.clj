@@ -13,7 +13,6 @@
             [liberator.util :only [parse-http-date http-date] :as du])
   (:gen-class))
 
-; TODO unit test methods
 ; TODO emails
 ; TODO algorithms
 ; TODO automatic trading
@@ -33,23 +32,23 @@
   (map io/file files))
 
 (defn all-currencies [save-dir date files]
-  ;[:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD])
-  (let [cur (a/do-func a/currencies (full-paths files))]
-    (if (empty? cur )
-      []
-      (into []
-            (into #{} ;hash-set filters out the duplicates
-                  (reduce into cur))))))
+  [:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD])
+  ;(let [cur (a/do-func a/currencies (full-paths files))]
+    ;(if (empty? cur )
+      ;[]
+      ;(into []
+            ;(into #{} ;hash-set filters out the duplicates
+                  ;(reduce into cur))))))
 
 ;=> (= combine create-pairs)
 ;true
 (defn currency-pairs [save-dir date files]
-  ;[[:EUR :BTC]])
+  [[:EUR :BTC]])
   ;[[:EUR :BTC] [:PPC :USD]])
-  (a/combine (all-currencies save-dir date files)))
+  ;(a/combine (all-currencies save-dir date files)))
 
-(defn get-vals [ zpp tag-0-1 tag-2 out-type]
-  "get rid of the (if ...)'s to gain speed"
+(defn get-vals [zpp tag-0-1 tag-2 out-type]
+  "Get rid of the (if ...)'s to gain speed"
   (let [v (xml1-> zpp (first tag-0-1) (second tag-0-1) tag-2 text)]
     (if (nil? v)
       nil
@@ -111,9 +110,9 @@
 (defn analyze! [download-date save-dir-unfixed]
   "save-dir-unfixed - means add a file.separator at the end if there isn't any"
   (let [save-dir (d/fix-dir-name save-dir-unfixed)
-        files-to-analyze (a/fpaths-between save-dir
+        files-to-analyze (dbg (a/fpaths-between save-dir
                                            (a/past-date download-date)
-                                           download-date)
+                                           download-date))
         cur-pairs (currency-pairs save-dir download-date files-to-analyze)
         cpv-all-tstamps (currency-pair-values-for-all-tstamps save-dir
                                                               download-date

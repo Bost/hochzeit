@@ -83,46 +83,40 @@
 
 (defn fmt-dirnames-between [date-from date-to]
   "Returns a vector of dirnames. I.e. [\"2013/04/18\" \"2013/04/19\"]"
-  (let [dname (dirname-between date-from date-to)]
-    (if (nil? dname)
+  (let [dname-between (dirname-between date-from date-to)]
+    (if (nil? dname-between)
       nil
-      (into [dname] (fmt-dirnames-between (next-day date-from) date-to)))))
+      (into [dname-between] (fmt-dirnames-between (next-day date-from) date-to)))))
 
 (defn fnames-between [date-from date-to]
-  "Alphabetically sort files under path and return full filepaths between date-from and date-to"
-  ;["/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_07-50-03.xml"
-  ;"/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_09-40-05.xml"
-  ;"/home/bambi/vircurex/2013/04/18/vircurex.2013-04-18_11-40-04.xml"
-  ;"/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_12-50-04.xml"
-  ;"/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_12-55-04.xml"])
+  "Alphabetically sort files under path and return vector of full filepaths between date-from and date-to"
   (let [fname-from       (fname (fname-date date-from))
-        fname-to         (fname (fname-date date-to))
-        dirnames-between (fmt-dirnames-between date-from date-to)]
-    ; TODO remove nil? could be done inside the for-loop
+        fname-to         (fname (fname-date date-to))]
+    ; TODO profile the remove nil? statement
     (into [] (first
-               (for [path-between dirnames-between]
+                 ;(remove nil?
+               (for [dirname-between (fmt-dirnames-between date-from date-to)]
                  (remove nil?
-                         (for [f (sort (fs/list-dir (str c-save-dir path-between)))]
+                         (for [f (sort (fs/list-dir (str c-save-dir dirname-between)))]
                            (file-between fname-from
                                          (str f)
                                          fname-to))))))))
 
 (defn prepend-path [path v] (into [] (map #(str path %) v)))
 
-(defn fpaths-between [save-dir date-from date-to]
-  ;"TODO first vs. reduce into"
-  (into []
-        (first
-          (for [dname (fmt-dirnames-between date-from date-to)]
-            (prepend-path (str save-dir dname c-fsep)
-                          (fnames-between date-from date-to))))))
+(defn xfpaths-between [save-dir date-from date-to]
+  (let [fb (fnames-between date-from date-to)]
+    (map #(prepend-path (str save-dir % c-fsep) fb)
+         (dbg (fmt-dirnames-between date-from date-to)))))
 
-(comment
-  (def c-from (create-date "Thu, 19 Apr 2013 01:00:00 GMT"))
-  (def c-to   (create-date "Thu, 19 Apr 2013 01:10:00 GMT"))
-  (fpaths-between c-save-dir c-from c-to)
-  (fs/list-dir "/home/bambi/vircurex/2013/04/19")
-)
+(defn fpaths-between [save-dir date-from date-to]
+  ; TODO use: map #(prepend-path ...)
+  (let [fb (fnames-between date-from date-to)]
+    (into []
+          (first
+            (for [fmt-dname-between (fmt-dirnames-between date-from date-to)]
+              (prepend-path (str save-dir fmt-dname-between c-fsep) fb))))))
+
 ; TODO see https://github.com/nathell/clj-tagsoup
 ; TODO see https://github.com/cgrand/enlive
 ; TODO Schejulure
