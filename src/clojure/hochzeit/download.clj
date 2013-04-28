@@ -16,13 +16,16 @@
                   (System/getProperty "user.home")))
 (def c-save-dir (str c-home-dir c-fsep "vircurex" c-fsep))
 ;(def c-fsep "/") ; file.separator is not detected properly for cygwin
-(def c-fmt-dir (tf/formatter (str "yyyy" c-fsep "MM" c-fsep "dd")))
+
+(def c-str-fmt-dir (str "yyyy" c-fsep "MM" c-fsep "dd"))
 (def c-str-fmt-name "yyyy-MM-dd_HH-mm-ss")
-(def c-fmt-fname (tf/formatter c-str-fmt-name))
 (def c-base-fname "vircurex")
 
+(def c-fmt-dir (tf/formatter c-str-fmt-dir))
+(def c-fmt-fname (tf/formatter c-str-fmt-name))
+
 (defn save-date-dir [save-dir date]
-  (str save-dir (dbg (tf/unparse c-fmt-dir (dbg date))) c-fsep))
+  (str save-dir (tf/unparse c-fmt-dir date) c-fsep))
 
 ; Wrap java.io.file methods
 (defn exists? [f] (.exists f))

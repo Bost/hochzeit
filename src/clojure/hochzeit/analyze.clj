@@ -15,7 +15,8 @@
 (def c-fsep         d/c-fsep)
 (def c-save-dir     d/c-save-dir)
 (def c-str-fmt-name d/c-str-fmt-name)
-(def c-fmt-fname    (tf/formatter c-str-fmt-name))
+(def c-fmt-fname    d/c-fmt-fname)
+(def c-fmt-dir      d/c-fmt-dir)
 
 (defmacro dbg[x] `(let [x# ~x] (println "analyze.dbg:" '~x "=" x#) x#))
 
@@ -51,54 +52,55 @@
               (if (not (.isDirectory file))
                 (func path))))))
 
-(def d (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 05:05:04 GMT" )))
-
 ; TODO change fn past-date to 24 hours
-(defn past-date [date] (tco/minus date (tco/hours 1)))
+(defn past-date [date] (tco/minus date (tco/hours 24)))
+(defn next-day  [date] (tco/plus date (tco/days 1)))
 
 (def c-base-fname "vircurex")
-(defn fname [formated-date] (str c-base-fname "." formated-date ".xml"))
+(defn fname   [formated-date] (str c-base-fname "." formated-date ".xml"))
+(defn dirname [date]          (str "" (tf/unparse c-fmt-dir date)))
 
 (defn fname-date [date] (str "" (tf/unparse c-fmt-fname date)))
 
-(defn formated-dates-between [date-from date-to]
-  ;["2013/04/18" "2013/04/19"]
-  ["2013/04/19"]
-  )
+(defn dirname-between [date-from date-to]
+  (let [dir-from (dirname date-from)
+        dir-to   (dirname date-to)]
+    (if (<= (compare dir-from dir-to) 0)
+      dir-from
+      nil)))
 
-(defmacro dbgx [x] `(let [x# ~x]
-                      ;(println "analyze.dbg:" '~x "=" x#)
-                      x#))
+(defn create-date [s]
+  (tce/from-date (du/parse-http-date s)))
 
-(defn file-between? [fname-from sf fname-to]
-  (and (<= (compare fname-from sf) 0)
-       (<= (compare sf   fname-to) 0)))
+(defn file-between? [fname-from tested-fname fname-to]
+  (and (<= (compare fname-from tested-fname) 0)
+       (<= (compare tested-fname   fname-to) 0)))
 
-(defn file-between [fname-from sf fname-to]
-  (if (file-between? fname-from sf fname-to)
-    sf
+(defn file-between [fname-from tested-fname fname-to]
+  (if (file-between? fname-from tested-fname fname-to)
+    tested-fname
     nil))
 
-(def c-from (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 01:00:00 GMT")))
-(def c-to (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 01:10:00 GMT")))
-
-(def ffrom "vircurex.2013-04-19_00-00-00.xml")
-(def fsf   "vircurex.2013-04-19_01-00-03.xml")
-(def fto   "vircurex.2013-04-19_02-00-00.xml")
+(defn fmt-dirnames-between [date-from date-to]
+  "Returns a vector of dirnames. I.e. [\"2013/04/18\" \"2013/04/19\"]"
+  (let [dname (dirname-between date-from date-to)]
+    (if (nil? dname)
+      nil
+      (into [dname] (fmt-dirnames-between (next-day date-from) date-to)))))
 
 (defn fnames-between [date-from date-to]
-  "Alphabetically sort files under path and return fnames youger that formated-date"
+  "Alphabetically sort files under path and return full filepaths between date-from and date-to"
   ;["/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_07-50-03.xml"
   ;"/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_09-40-05.xml"
   ;"/home/bambi/vircurex/2013/04/18/vircurex.2013-04-18_11-40-04.xml"
   ;"/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_12-50-04.xml"
   ;"/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_12-55-04.xml"])
-  (let [fname-from         (fname (fname-date date-from))
-        fname-to           (fname (fname-date date-to))
-        dates-between      (formated-dates-between date-from date-to)]
+  (let [fname-from       (fname (fname-date date-from))
+        fname-to         (fname (fname-date date-to))
+        dirnames-between (fmt-dirnames-between date-from date-to)]
     ; TODO remove nil? could be done inside the for-loop
     (into [] (first
-               (for [path-between dates-between]
+               (for [path-between dirnames-between]
                  (remove nil?
                          (for [f (sort (fs/list-dir (str c-save-dir path-between)))]
                            (file-between fname-from
@@ -107,8 +109,18 @@
 
 (defn prepend-path [path v] (into [] (map #(str path %) v)))
 
+(defn fpaths-between [save-dir date-from date-to]
+  ;"TODO first vs. reduce into"
+  (into []
+        (first
+          (for [dname (fmt-dirnames-between date-from date-to)]
+            (prepend-path (str save-dir dname c-fsep)
+                          (fnames-between date-from date-to))))))
+
 (comment
-  (prepend-path c-save-dir (fnames-between c-from c-to))
+  (def c-from (create-date "Thu, 19 Apr 2013 01:00:00 GMT"))
+  (def c-to   (create-date "Thu, 19 Apr 2013 01:10:00 GMT"))
+  (fpaths-between c-save-dir c-from c-to)
   (fs/list-dir "/home/bambi/vircurex/2013/04/19")
 )
 ; TODO see https://github.com/nathell/clj-tagsoup
