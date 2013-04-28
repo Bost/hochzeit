@@ -62,7 +62,9 @@
 (defn fname-date [date] (str "" (tf/unparse c-fmt-fname date)))
 
 (defn formated-dates-between [date-from date-to]
-  ["2013/04/19"])
+  ;["2013/04/18" "2013/04/19"]
+  ["2013/04/19"]
+  )
 
 (defmacro dbgx [x] `(let [x# ~x]
                       ;(println "analyze.dbg:" '~x "=" x#)
@@ -77,44 +79,36 @@
     sf
     nil))
 
-
-(defn fnames-between [date-from path-from date-to path-to]
-  "Alphabetically sort files under path and return fnames youger that formated-date"
-  ;["/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_07-50-03.xml"
-   ;"/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_09-40-05.xml"
-   ;"/home/bambi/vircurex/2013/04/18/vircurex.2013-04-18_11-40-04.xml"
-   ;"/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_12-50-04.xml"
-   ;"/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_12-55-04.xml"])
-  (let [
-        formated-date-from (fname-date date-from)
-        formated-date-to   (fname-date date-to)
-        fname-from         (fname formated-date-from)
-        fname-to           (fname formated-date-to)
-        dates-between      (formated-dates-between date-from date-to)
-        ]
-    (dbg
-      (into []
-            ; TODO remove nil? could be done inside the for-loop
-            (for [path-between dates-between]
-                               ;["/home/bambi/vircurex/2013/04/19"]]
-              (remove nil?
-                      (for [f (sort (fs/list-dir (str c-save-dir path-between)))]
-                        (dbg (file-between (dbg fname-from)
-                                      (dbg (str f))
-                                      (dbg fname-to))))))))))
-
-(def c-from (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 00:00:00 GMT")))
-(def c-to (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 00:10:00 GMT")))
-
+(def c-from (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 01:00:00 GMT")))
+(def c-to (tce/from-date (du/parse-http-date "Thu, 19 Apr 2013 01:10:00 GMT")))
 
 (def ffrom "vircurex.2013-04-19_00-00-00.xml")
 (def fsf   "vircurex.2013-04-19_01-00-03.xml")
 (def fto   "vircurex.2013-04-19_02-00-00.xml")
 
-;(file-between ffrom fsf fto)
-;(fnames-between c-from "" c-to "")
+(defn fnames-between [date-from date-to]
+  "Alphabetically sort files under path and return fnames youger that formated-date"
+  ;["/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_07-50-03.xml"
+  ;"/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_09-40-05.xml"
+  ;"/home/bambi/vircurex/2013/04/18/vircurex.2013-04-18_11-40-04.xml"
+  ;"/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_12-50-04.xml"
+  ;"/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_12-55-04.xml"])
+  (let [fname-from         (fname (fname-date date-from))
+        fname-to           (fname (fname-date date-to))
+        dates-between      (formated-dates-between date-from date-to)]
+    ; TODO remove nil? could be done inside the for-loop
+    (into [] (first
+               (for [path-between dates-between]
+                 (remove nil?
+                         (for [f (sort (fs/list-dir (str c-save-dir path-between)))]
+                           (file-between fname-from
+                                         (str f)
+                                         fname-to))))))))
+
+(defn prepend-path [path v] (into [] (map #(str path %) v)))
 
 (comment
+  (prepend-path c-save-dir (fnames-between c-from c-to))
   (fs/list-dir "/home/bambi/vircurex/2013/04/19")
 )
 ; TODO see https://github.com/nathell/clj-tagsoup

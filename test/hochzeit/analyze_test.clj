@@ -39,7 +39,7 @@
                          false))))
 
 (deftest file-between--positive-test
-         (testing "Datename between itself"
+         (testing "Datename in zero-sized interval (between itself)"
                   (is (= (a/file-between? "vircurex.2013-04-19_00-00-00.xml"
                                           "vircurex.2013-04-19_00-00-00.xml"
                                           "vircurex.2013-04-19_00-00-00.xml")

@@ -22,12 +22,12 @@
 (defmacro dbg [x] `(let [x# ~x] (println "core.dbg:" '~x "=" x#) x#))
 
 ;(def c-fsep (System/getProperty "file.separator"))
-(def c-fsep d/c-fsep)
-
+(def c-fsep         d/c-fsep)
+(def c-save-dir     d/c-save-dir)
 (def c-str-fmt-name d/c-str-fmt-name)
 (def c-fmt-fname    d/c-fmt-fname)
 (def c-base-fname   d/c-base-fname)
-(def c-fmt-len (+ (.length c-str-fmt-name) 2))
+(def c-fmt-len      (+ (.length c-str-fmt-name) 2))
 (def c-date (tce/from-date (du/parse-http-date
                             ;"Thu, 23 Apr 2013 22:51:00 GMT")))
                             ;"Thu, 19 Apr 2013 05:05:04 GMT")))
@@ -110,10 +110,8 @@
                           (second tstamp-values)))))))
 
 (defn fnames-between [date-from date-to save-dir]
-  (a/fnames-between date-from
-                    (d/save-date-dir save-dir date-from)
-                    date-to
-                    (d/save-date-dir save-dir date-to)))
+  (a/prepend-path c-save-dir (a/fnames-between date-from
+                                               date-to)))
 
 (defn basename [filepath]
   (.substring filepath
@@ -123,7 +121,9 @@
 (defn analyze! [download-date save-dir-unfixed]
   "save-dir-unfixed - means add a file.separator at the end if there isn't any"
   (let [save-dir (d/fix-dir-name save-dir-unfixed)
-        files-to-analyze (fnames-between (a/past-date download-date) download-date save-dir)
+        files-to-analyze (fnames-between (a/past-date download-date)
+                                         download-date
+                                         save-dir)
         cur-pairs (currency-pairs save-dir download-date files-to-analyze)
         cpv-all-tstamps (currency-pair-values-for-all-tstamps save-dir
                                                               download-date
@@ -143,14 +143,14 @@
 
 (defn -main []
   ;(profile :info :Arithmetic (analyze! c-src-uri c-save-dir)))
-  (analyze! c-date d/c-save-dir))
+  (analyze! c-date c-save-dir))
 
 ;(defn -main [src-uri save-dir-unfixed]
   ;(let [download-date (download! src-uri save-dir-unfixed)]
        ;;[download-date c-date]
     ;(analyze! download-date save-dir-unfixed)))
 
-(analyze! c-date d/c-save-dir)
+(analyze! c-date c-save-dir)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
