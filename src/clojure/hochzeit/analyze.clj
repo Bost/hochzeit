@@ -17,6 +17,7 @@
 (def c-str-fmt-name d/c-str-fmt-name)
 (def c-fmt-fname    d/c-fmt-fname)
 (def c-fmt-dir      d/c-fmt-dir)
+(def c-base-fname   "vircurex")
 
 (defmacro dbg[x] `(let [x# ~x] (println "analyze.dbg:" '~x "=" x#) x#))
 
@@ -52,67 +53,53 @@
               (if (not (.isDirectory file))
                 (func path))))))
 
-; TODO change fn past-date to 24 hours
-(defn past-date [date] (tco/minus date (tco/hours 24)))
-(defn next-day  [date] (tco/plus date (tco/days 1)))
+(defn past-date   [date] (tco/minus date (tco/hours 24)))
+(defn next-day    [date] (tco/plus date (tco/days 1)))
+(defn dirname     [date] (tf/unparse c-fmt-dir date))
+(defn fname       [date] (str c-base-fname "." (tf/unparse c-fmt-fname date) ".xml"))
+; create-date is for debug purposes
+(defn create-date [s]    (tce/from-date (du/parse-http-date s)))
 
-(def c-base-fname "vircurex")
-(defn fname   [formated-date] (str c-base-fname "." formated-date ".xml"))
-(defn dirname [date]          (str "" (tf/unparse c-fmt-dir date)))
+(defn between? [x i y]
+  (and (<= (compare x i) 0)
+       (<= (compare i y) 0)))
 
-(defn fname-date [date] (str "" (tf/unparse c-fmt-fname date)))
+(defn s-between [x i y] (if (between? x i y) i nil))
 
-(defn dirname-between [date-from date-to]
-  (let [dir-from (dirname date-from)
-        dir-to   (dirname date-to)]
-    (if (<= (compare dir-from dir-to) 0)
-      dir-from
-      nil)))
-
-(defn create-date [s]
-  (tce/from-date (du/parse-http-date s)))
-
-(defn file-between? [fname-from tested-fname fname-to]
-  (and (<= (compare fname-from tested-fname) 0)
-       (<= (compare tested-fname   fname-to) 0)))
-
-(defn file-between [fname-from tested-fname fname-to]
-  (if (file-between? fname-from tested-fname fname-to)
-    tested-fname
-    nil))
+(defn str-between
+  ([x i]   (s-between x x i))
+  ([x i y] (s-between x i y)))
 
 (defn fmt-dirnames-between [date-from date-to]
   "Returns a vector of dirnames. I.e. [\"2013/04/18\" \"2013/04/19\"]"
-  (let [dname-between (dirname-between date-from date-to)]
-    (if (nil? dname-between)
-      nil
-      (into [dname-between] (fmt-dirnames-between (next-day date-from) date-to)))))
+  (let [dir-between (str-between (dirname date-from) (dirname date-to))]
+    (if (not (nil? dir-between))
+      (into [dir-between] (fmt-dirnames-between (next-day date-from) date-to)))))
 
 (defn getpath [date-from date-to]
   (map #(str c-save-dir % c-fsep) (fmt-dirnames-between date-from date-to)))
 
-(defn fb [path fname-from fname-to]
+(defn files-between [path x y]
   (remove nil?
-          (map #(file-between fname-from (str %) fname-to)
-               (sort (fs/list-dir path)))))
+          (map #(str-between x (str %) y) (sort (fs/list-dir path)))))
 
-(defn fnames-between [date-from date-to]
+; TODO try to get rid of (into [] (first ..))
+(defn fnames-between [date-from date-to paths]
   "Alphabetically sort files under path and return vector of full filepaths between date-from and date-to"
-  (let [fname-from       (fname (fname-date date-from))
-        fname-to         (fname (fname-date date-to))]
-    ; TODO profile the remove nil? statement
-    (into [] (first
-               (dbg (map #(fb % fname-from fname-to) (getpath date-from date-to)))))))
+  (let [fname-from (fname date-from)
+        fname-to   (fname date-to)]
+    (into []
+          (first
+            (map #(files-between % fname-from fname-to) paths)))))
 
 (defn prepend-path [path v] (into [] (map #(str path %) v)))
 
-(defn fpaths-between [save-dir date-from date-to]
-  ; TODO use: map #(prepend-path ...)
-  (let [fb (fnames-between date-from date-to)]
+(defn fpaths-between [date-from date-to]
+  (let [paths (getpath date-from date-to)
+        fb (fnames-between date-from date-to paths)]
     (into []
           (first
-            (for [fmt-dname-between (fmt-dirnames-between date-from date-to)]
-              (prepend-path (str save-dir fmt-dname-between c-fsep) fb))))))
+            (map #(prepend-path % fb) paths)))))
 
 ; TODO see https://github.com/nathell/clj-tagsoup
 ; TODO see https://github.com/cgrand/enlive

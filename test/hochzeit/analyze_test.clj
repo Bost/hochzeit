@@ -2,6 +2,7 @@
   (:use [clojure.test])
   (:require
     [clj-time.coerce :as tce]
+    [hochzeit.download :as d]
     ;[hochzeit.core :as c]
     ;[clojure.java.io :as io]
     ;[clj-time.core :as tco]
@@ -11,6 +12,7 @@
     [hochzeit.analyze :as a]))
 
 (defmacro dbg [x] `(let [x# ~x] (println "analyze-test.dbg:" '~x "=" x#) x#))
+(def c-save-dir d/c-save-dir)
 
 (deftest file-between--negative-test
          (testing "Datename before zero-sized interval"
@@ -144,26 +146,22 @@
 
 (deftest fpaths-between--positive-results
          (testing "fpaths: Zero difference between dates"
-                  (is (= (a/fpaths-between a/c-save-dir
-                                           (a/create-date "Thu, 19 Apr 2013 00:00:00 GMT")
+                  (is (= (a/fpaths-between (a/create-date "Thu, 19 Apr 2013 00:00:00 GMT")
                                            (a/create-date "Thu, 19 Apr 2013 00:00:00 GMT"))
                          [])))
          (testing "17 Apr and 18 Apr"
-                  (is (= (a/fpaths-between a/c-save-dir
-                                           (a/create-date "Thu, 17 Apr 2013 21:00:00 GMT")
+                  (is (= (a/fpaths-between (a/create-date "Thu, 17 Apr 2013 21:00:00 GMT")
                                            (a/create-date "Thu, 18 Apr 2013 00:00:00 GMT"))
                          [])))
          (testing "1 hour difference between dates"
-                  (is (= (a/fpaths-between a/c-save-dir
-                                           (a/create-date "Thu, 19 Apr 2013 01:00:00 GMT")
+                  (is (= (a/fpaths-between (a/create-date "Thu, 19 Apr 2013 01:00:00 GMT")
                                            (a/create-date "Thu, 19 Apr 2013 01:10:00 GMT"))
-                         ["/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_01-00-03.xml"
-                          "/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_01-05-03.xml"])))
+                         [(str c-save-dir "2013/04/19/vircurex.2013-04-19_01-00-03.xml")
+                          (str c-save-dir "2013/04/19/vircurex.2013-04-19_01-05-03.xml")])))
          (testing "past-date"
-                  (is (= (a/fpaths-between a/c-save-dir
-                                           (a/create-date "Thu, 18 Apr 2013 12:55:00 GMT")
+                  (is (= (a/fpaths-between (a/create-date "Thu, 18 Apr 2013 12:55:00 GMT")
                                            (a/create-date "Thu, 19 Apr 2013 00:00:00 GMT"))
-                         ["/home/bambi/vircurex/2013/04/18/vircurex.2013-04-18_12-55-04.xml"])))
+                         [(str c-save-dir "2013/04/18/vircurex.2013-04-18_12-55-04.xml")])))
          )
 
 (dirnames-between--positive-results)

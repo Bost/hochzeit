@@ -28,7 +28,7 @@
 
  ;TODO test for corner cases: date too high/low
 
-(def date (tce/from-date (du/parse-http-date "Thu, 18 Apr 2013 10:33:15 GMT" )))
+(def date (a/create-date "Thu, 18 Apr 2013 10:33:15 GMT" ))
 (def date-24 (c/resp-date-24 date))
 (prn date-24)
 (def str-date-24 (tf/unparse c/fmt-dir date-24))

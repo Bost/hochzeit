@@ -30,8 +30,7 @@
 (def c-base-fname   d/c-base-fname)
 (def c-fmt-len      (+ (.length c-str-fmt-name) 2))   ; 2-times "."
 
-(defn full-paths [files]
-  (map io/file files))
+(defn full-paths [files] (map io/file files))
 
 (defn all-currencies [save-dir date files]
   [:BTC :CHF :DVC :EUR :IXC :LTC :NMC :PPC :SC :TRC :USD])
@@ -52,8 +51,7 @@
 (defn get-vals [zpp tag-0-1 tag-2 out-type]
   "Get rid of the (if ...)'s to gain speed"
   (let [v (xml1-> zpp (first tag-0-1) (second tag-0-1) tag-2 text)]
-    (if (nil? v)
-      nil
+    (if (not (nil? v))
       (if (= out-type :headers)
         tag-0-1
         v))))
@@ -63,10 +61,16 @@
 (defn get-zipped [fname-xml]
   (zip/xml-zip (xml/parse fname-xml)))
 
-(defn currency-pair-values-for-all-tstamps [save-dir date files cur-pairs]
+;(defn zipps [files] ;(a/do-func get-zipped (full-paths files))
+
+;(defn currency-pair-values-for-all-tstamps [save-dir date files pairs]
+  ;(for [zpp (zipps files)]
+    ;(map #(get-vals zpp % :highest-bid :vals) pairs)))
+
+(defn currency-pair-values-for-all-tstamps [save-dir date files cpairs]
   (for [zpp (a/do-func get-zipped (full-paths files))]
-    (for [currency-pair cur-pairs]
-      (get-vals zpp currency-pair :highest-bid :vals))))
+    (for [cp cpairs]
+      (get-vals zpp cp :highest-bid :vals))))
 
 ; Wrap java.io.file methods
 (defn is-file? [f] (.isFile f))
@@ -74,16 +78,12 @@
 (defn get-path [f] (.getPath f))
 
 (defn get-xml-files [file-dir pattern]
-    "Recursively get a list of File objects for files ending in .xml in the given directory"
-    (let [ls (if (d/is-dir? file-dir) (.listFiles file-dir) nil)
-          files (filter is-file? ls)
-          dirs (filter d/is-dir? ls)]
-      (if (nil? ls)
-        nil
-        (flatten (concat
-          (filter (fn [f] (re-matches pattern (get-name f))) files) ; .m files
-          (map #(get-xml-files % pattern) dirs))))))
-
+  "Recursively get a list of File objects for files ending in .xml in the given directory"
+  (let [ls (if (d/is-dir? file-dir) (.listFiles file-dir))]
+    (if (not (nil? ls))
+      (flatten (concat
+                 (filter (fn [f] (re-matches pattern (get-name f))) (filter is-file? ls))
+                 (map #(get-xml-files % pattern) (filter d/is-dir? ls)))))))
 
 (defn fname-tstamp [fname]
   "Extract timestamp form filename"
@@ -95,14 +95,14 @@
   (println
     (dorun
       (map #(print (fmt %))
-           (into [(a/fname-date download-date)] currency-pairs)))))
+           (into [(a/fname download-date)] currency-pairs)))))
 
 (defn print-table! [tstamp-cp-values]
   (doseq [tstamp-values tstamp-cp-values]
+    (let [tstamp (fname-tstamp (first tstamp-values))]
       (println
         (dorun (map #(print (fmt %))
-                    (into [(fname-tstamp (first tstamp-values))]
-                          (second tstamp-values)))))))
+                    (into [tstamp] (second tstamp-values))))))))
 
 (defn basename [filepath]
   (.substring filepath
@@ -112,8 +112,7 @@
 (defn analyze! [download-date save-dir-unfixed]
   "save-dir-unfixed - means add a file.separator at the end if there isn't any"
   (let [save-dir (d/fix-dir-name save-dir-unfixed)
-        files-to-analyze (a/fpaths-between save-dir
-                                           (a/past-date download-date)
+        files-to-analyze (a/fpaths-between (a/past-date download-date)
                                            download-date)
         cur-pairs (currency-pairs save-dir download-date files-to-analyze)
         cpv-all-tstamps (currency-pair-values-for-all-tstamps save-dir
