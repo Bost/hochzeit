@@ -10,6 +10,7 @@
                  [me.raynes/fs "1.4.0"]
                  [org.clojure/clojure "1.5.1"]
                  [cc.artifice/vijual "0.2.5"]
+                 [com.draines/postal "1.10.2"]
                  ;[clojurewerkz/money "1.2.0"]
                  [org.clojure/data.zip "0.1.1"]
                  [com.taoensso/timbre "1.6.0"]]
