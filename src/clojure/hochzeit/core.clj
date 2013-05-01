@@ -1,7 +1,11 @@
 (ns hochzeit.core
   (:use [clojure.data.zip.xml] ;s:only [attr text xml-> xml1->]
         ;[taoensso.timbre :as timbre :only (trace debug info warn error fatal spy)]
-        [taoensso.timbre.profiling :as profiling :only (p profile)])
+        ;[incanter.core :as ico]
+        [incanter.stats :as ist]
+        ;[incanter.charts :as ich]
+        ;[incanter.datasets :as ids]
+        [taoensso.timbre.profiling :as profiling :only [p profile]])
   (:require [hochzeit.analyze :as a]
             [hochzeit.download :as d]
             [clj-time.core :as tco]
@@ -14,6 +18,10 @@
             [clojure.pprint :as pp]
             [liberator.util :only [parse-http-date http-date] :as du])
   (:gen-class))
+
+;(def plant-growth (to-matrix (ids/get-dataset :plant-growth)))
+;(ist/mean (sample-normal 100))
+;(sample-normal 100)
 
 ; TODO emails
 ; TODO algorithms
@@ -152,7 +160,28 @@
        ;;[download-date c-date]
     ;(analyze! download-date save-dir-unfixed)))
 
-(analyze! c-date c-save-dir)
+;(analyze! c-date c-save-dir)
+
+(defn cpv [download-date save-dir-unfixed]
+  "save-dir-unfixed - means add a file.separator at the end if there isn't any"
+  (let [save-dir (d/fix-dir-name save-dir-unfixed)
+        files-to-analyze (a/all-filepaths-between (a/past-date download-date)
+                                           download-date)
+        cur-pairs (currency-pairs save-dir download-date files-to-analyze)
+        cpv-all-tstamps (currency-pair-values-for-all-tstamps save-dir
+                                                              download-date
+                                                              files-to-analyze
+                                                              cur-pairs)]
+        cpv-all-tstamps))
+
+(def v (reduce into [] (cpv c-date c-save-dir)))
+(def bv (map #(bigdec %) v))
+(type bv)
+(ist/mean bv)
+
+;(ico/mean v)
+;(ico/view (ich/histogram (ist/sample-normal 1000)))
+
 
 ;(v/draw-tree-image [[:north-america [:usa [:miami] [:seattle] [:idaho [:boise]]]] [:europe [:germany] [:france [:paris] [:lyon] [:cannes]]]])
 ;(v/draw-tree [[:north-america [:usa [:miami] [:seattle] [:idaho [:boise]]]] [:europe [:germany] [:france [:paris] [:lyon] [:cannes]]]])
