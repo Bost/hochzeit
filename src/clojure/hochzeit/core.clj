@@ -18,6 +18,10 @@
 ; TODO emails
 ; TODO algorithms
 ; TODO automatic trading
+; TODO Learn clojure https://github.com/relevance/labrepl.git
+; TODO search for patterns of code for which there might exist a more idiomatic function or macro https://github.com/jonase/kibit.git
+; TODO graphs: https://github.com/olabini/clj-gremlin.git; https://github.com/tinkerpop/gremlin
+; TODO JVM Metrics: https://github.com/codahale/metrics
 
 ;;debugging parts of expressions
 (defmacro dbg [x] `(let [x# ~x] (println "core.dbg:" '~x "=" x#) x#))
@@ -91,11 +95,11 @@
         (.length (str c-base-fname "."))
         (- (.length fname) (.length ".xml"))))
 
-(defn print-header! [download-date currency-pairs]
+(defn print-header! [currency-pairs]
   (println
     (dorun
       (map #(print (fmt %))
-           (into [(a/fname download-date)] currency-pairs)))))
+           (into [" "] currency-pairs)))))
 
 (defn print-table! [tstamp-cp-values]
   (doseq [tstamp-values tstamp-cp-values]
@@ -112,7 +116,7 @@
 (defn analyze! [download-date save-dir-unfixed]
   "save-dir-unfixed - means add a file.separator at the end if there isn't any"
   (let [save-dir (d/fix-dir-name save-dir-unfixed)
-        files-to-analyze (a/fpaths-between (a/past-date download-date)
+        files-to-analyze (a/all-filepaths-between (a/past-date download-date)
                                            download-date)
         cur-pairs (currency-pairs save-dir download-date files-to-analyze)
         cpv-all-tstamps (currency-pair-values-for-all-tstamps save-dir
@@ -121,7 +125,7 @@
                                                               cur-pairs)
         base-file-names (map basename files-to-analyze)
         tstamp-cp-values (map vector base-file-names cpv-all-tstamps)]
-    (print-header! download-date cur-pairs)
+    (print-header! cur-pairs)
     (print-table! tstamp-cp-values)))
 
 (defn download! [src-uri save-dir-unfixed]

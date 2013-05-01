@@ -53,10 +53,12 @@
               (if (not (.isDirectory file))
                 (func path))))))
 
-(defn past-date   [date] (tco/minus date (tco/hours 24)))
-(defn next-day    [date] (tco/plus date (tco/days 1)))
-(defn dirname     [date] (tf/unparse c-fmt-dir date))
-(defn fname       [date] (str c-base-fname "." (tf/unparse c-fmt-fname date) ".xml"))
+(defn past-date [date] (tco/minus date (tco/hours 12)))
+(defn next-day  [date] (tco/plus date (tco/days 1)))
+(defn dirname   [date] (tf/unparse c-fmt-dir date))
+(defn filename  [date] (str c-base-fname "." (tf/unparse c-fmt-fname date) ".xml"))
+(defn fullpath  [date] (str c-save-dir (dirname date) c-fsep))
+(defn filepath  [date] (str (fullpath date) (filename date)))
 ; create-date is for debug purposes
 (defn create-date [s]    (tce/from-date (du/parse-http-date s)))
 
@@ -70,36 +72,21 @@
   ([x i]   (s-between x x i))
   ([x i y] (s-between x i y)))
 
-(defn fmt-dirnames-between [date-from date-to]
-  "Returns a vector of dirnames. I.e. [\"2013/04/18\" \"2013/04/19\"]"
-  (let [dir-between (str-between (dirname date-from) (dirname date-to))]
+(defn dirs-between [date-from date-to]
+  (let [dir-between (str-between (fullpath date-from) (fullpath date-to))]
     (if (not (nil? dir-between))
-      (into [dir-between] (fmt-dirnames-between (next-day date-from) date-to)))))
+      (into [dir-between] (dirs-between (next-day date-from) date-to)))))
 
-(defn getpath [date-from date-to]
-  (map #(str c-save-dir % c-fsep) (fmt-dirnames-between date-from date-to)))
-
-(defn files-between [path x y]
+(defn filepaths-between [path x y]
   (remove nil?
-          (map #(str-between x (str %) y) (sort (fs/list-dir path)))))
+          (map #(str-between x (str path %) y) (into [] (sort (fs/list-dir path))))))
 
-; TODO try to get rid of (into [] (first ..))
-(defn fnames-between [date-from date-to paths]
-  "Alphabetically sort files under path and return vector of full filepaths between date-from and date-to"
-  (let [fname-from (fname date-from)
-        fname-to   (fname date-to)]
-    (into []
-          (first
-            (map #(files-between % fname-from fname-to) paths)))))
-
-(defn prepend-path [path v] (into [] (map #(str path %) v)))
-
-(defn fpaths-between [date-from date-to]
-  (let [paths (getpath date-from date-to)
-        fb (fnames-between date-from date-to paths)]
-    (into []
-          (first
-            (map #(prepend-path % fb) paths)))))
+(defn all-filepaths-between [date-from date-to]
+  (let [from (filepath date-from)
+        to   (filepath date-to)]
+    (reduce into []
+            (remove empty?
+                    (map #(filepaths-between % from to) (dirs-between date-from date-to))))))
 
 ; TODO see https://github.com/nathell/clj-tagsoup
 ; TODO see https://github.com/cgrand/enlive
