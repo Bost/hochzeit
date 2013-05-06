@@ -31,16 +31,9 @@
        ;]]
     (reduce into [] (map #(filepath %) paths))))
 
-
 (defn mod-hour [filepath]
   (let [time (fs/mod-time filepath)]
     (tco/hour (tce/from-long time))))
-
-(defn mod-hours [filepaths]
-  (let [times (into [] (map #(fs/mod-time %) filepaths))]
-    (into [] (map #(tco/hour %)
-                  (into [] (map #(tce/from-long %) times))))))
-
 
 (def c-str-fmt-dir d/c-str-fmt-dir)
 (def c-str-fmt-name d/c-str-fmt-name)
@@ -52,23 +45,11 @@
 (def begin (+ (.length c-base-fname) 1 4 1 2 1 2 1))
 (def end (+ begin 2))
 
-
 (defn fname-hour [filepath]
   (Integer. (.substring (fs/base-name filepath) begin end)))
 
-
-(defn s-fname-hours [filepaths]
-  (into [] (map #(fname-hour %) filepaths)))
-
-
-(defn fname-hours [filepaths]
-  (into [] (map #(Integer. %) (s-fname-hours filepaths))))
-
 (defn modify? [time0 time1]
   (= (+ time0 12) time1))
-
-
-(defn pairs [filepaths]  (map vector (fname-hours filepaths) (mod-hours filepaths)))
 
 (defn new-fname [filepath]
   (let [f-hour (fname-hour filepath)
