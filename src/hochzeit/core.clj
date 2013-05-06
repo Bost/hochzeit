@@ -14,7 +14,6 @@
             [clojure.zip :as zip]
             [clojure.xml :as xml]
             [clojure.java.io :as io]
-            [vijual :as v]
             [clojure.pprint :as pp]
             [liberator.util :only [parse-http-date http-date] :as du])
   (:gen-class))
@@ -28,7 +27,11 @@
 ; TODO automatic trading
 ; TODO Learn clojure https://github.com/relevance/labrepl.git
 ; TODO search for patterns of code for which there might exist a more idiomatic function or macro https://github.com/jonase/kibit.git
-; TODO graphs: https://github.com/olabini/clj-gremlin.git; https://github.com/tinkerpop/gremlin
+;
+; TODO graphs: Gremlin is a graph traversal language: java: https://github.com/tinkerpop/gremlin
+;                                                     clojure: https://github.com/olabini/clj-gremlin.git
+;              Visualization: https://github.com/ztellman/rhizome (Starred 516 times, requires graphviz installed: dot -V)
+;                             https://github.com/drcode/vijual.git (Starred 67 times, can produce textmode graphs, from Conrad Banski)
 ; TODO JVM Metrics: https://github.com/codahale/metrics
 
 ;;debugging parts of expressions
@@ -163,7 +166,7 @@
 ;(analyze! c-date c-save-dir)
 
 (defn cpv [download-date save-dir-unfixed]
-  "save-dir-unfixed - means add a file.separator at the end if there isn't any"
+  "Currency-Pair-Values; save-dir-unfixed - means add a file.separator at the end if there isn't any"
   (let [save-dir (d/fix-dir-name save-dir-unfixed)
         files-to-analyze (a/all-filepaths-between (a/past-date download-date)
                                            download-date)
@@ -174,22 +177,7 @@
                                                               cur-pairs)]
         cpv-all-tstamps))
 
-(def v (reduce into [] (cpv c-date c-save-dir)))
-(def bv (map #(bigdec %) v))
-(type bv)
-(ist/mean bv)
 
-;(ico/mean v)
-;(ico/view (ich/histogram (ist/sample-normal 1000)))
-
-
-;(v/draw-tree-image [[:north-america [:usa [:miami] [:seattle] [:idaho [:boise]]]] [:europe [:germany] [:france [:paris] [:lyon] [:cannes]]]])
-;(v/draw-tree [[:north-america [:usa [:miami] [:seattle] [:idaho [:boise]]]] [:europe [:germany] [:france [:paris] [:lyon] [:cannes]]]])
-
-
-;(v/draw-graph-image [[:a :b] [:b :c] [:c :d] [:a :d] [:e :f] [:a :f] [:g :e] [:d :e]])
-;(v/draw-graph [[:a :b] [:b :c] [:c :d] [:a :d] [:e :f] [:a :f] [:g :e] [:d :e]])
-;(pp/print-table [{:a 1 :b 2 :c 3} {:b 5 :a 7 :c "dog"}])
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;(
