@@ -2,7 +2,7 @@
   (:use ;[vijual :as v]           ; simple (console based) graph visualization
         [rhizome.viz]))
 
-; TODO take a look at https://github.com/ibdknox/ChromaShift.git from Chris Granger
+; TODO take a look at http://www.ryandesign.com/canviz/
 
 (def g
     {:a [:b :c]
