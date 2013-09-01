@@ -18,6 +18,8 @@
 (def c-fmt-fname    d/c-fmt-fname)
 (def c-fmt-dir      d/c-fmt-dir)
 (def c-base-fname   d/c-base-fname)
+(def c-flat-fs      true)
+;; (def c-flat-fs     false)    ;; YYYY/MM/DD
 
 (defmacro dbg[x] `(let [x# ~x] (println "analyze.dbg:" '~x "=" x#) x#))
 
@@ -55,10 +57,16 @@
 
 (defn past-date [date] (tco/minus date (tco/hours 12)))
 (defn next-day  [date] (tco/plus date (tco/days 1)))
-(defn dirname   [date] (tf/unparse c-fmt-dir date))
+(defn dirname   [flat-fs? date]
+  "Example: (dirname false (create-date \"Thu, 18 Apr 2013 12:55:00 GMT\"))"
+  "=> \"2013/04/18\""
+  (if flat-fs?
+    ""
+    (tf/unparse c-fmt-dir date)))
+
 (defn filename  [date] (str c-base-fname "." (tf/unparse c-fmt-fname date) ".xml"))
-(defn fullpath  [date] (str c-save-dir (dirname date) c-fsep))
-(defn filepath  [date] (str (fullpath date) (filename date)))
+(defn fullpath  [flat-fs? path date] (str path (dirname flat-fs? date) (if flat-fs? "" c-fsep)))
+(defn filepath  [flat-fs? path date] (str (fullpath flat-fs? path date) (filename date)))
 ; create-date is for debug purposes
 (defn create-date [s]    (tce/from-date (du/parse-http-date s)))
 
@@ -83,13 +91,14 @@
           (map #(str-between x (str path %) y)
                (into [] (sort (fs/list-dir path))))))
 
-(defn all-filepaths-between [date-from date-to]
+(defn all-filepaths-between [flat-fs? path date-from date-to]
   "TODO all-filepaths-between: implement for the YYYY/MM/DD/vircurex.*.xml file structure"
-  (let [from (filepath date-from)
-        to   (filepath date-to)]
-    (reduce into []
+  (let [from (filepath flat-fs? path date-from)
+        to   (filepath flat-fs? path date-to)]
+    ;; origininally there was 'reduce into []'
+    (into []
             (remove empty?
-                    (filepaths-between d/c-save-dir from to)
+                    (filepaths-between path from to)
                     ;; (map #(filepaths-between % from to)
                     ;;      (dirs-between date-from date-to))
                     ))))
@@ -97,4 +106,3 @@
 ; TODO see https://github.com/nathell/clj-tagsoup
 ; TODO see https://github.com/cgrand/enlive
 ; TODO Schejulure
-
