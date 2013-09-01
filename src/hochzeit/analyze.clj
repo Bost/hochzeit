@@ -95,7 +95,6 @@
   "TODO all-filepaths-between: implement for the YYYY/MM/DD/vircurex.*.xml file structure"
   (let [from (filepath flat-fs? path date-from)
         to   (filepath flat-fs? path date-to)]
-    ;; origininally there was 'reduce into []'
     (into []
             (remove empty?
                     (filepaths-between path from to)

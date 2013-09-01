@@ -121,6 +121,15 @@
                          "vircurex.2013-04-19_00-00-01.xml"))))
 
 
+(deftest one-file
+  (testing "Just one file"
+    (is (= (dbg (a/all-filepaths-between
+                 c-flat-fs
+                 c-save-dir
+                 (a/create-date "Thu, 19 Apr 2013 00:00:00 GMT")
+                 (a/create-date "Thu, 19 Apr 2013 01:05:00 GMT")))
+           ["/home/bost/vircurex-flat/vircurex.2013-04-19_01-00-03.xml"]))))
+
 (deftest fpaths-between--positive-results
          (testing "fpaths: Zero difference between dates"
            (is (= (a/all-filepaths-between
