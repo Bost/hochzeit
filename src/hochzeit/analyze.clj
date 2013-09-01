@@ -17,7 +17,7 @@
 (def c-str-fmt-name d/c-str-fmt-name)
 (def c-fmt-fname    d/c-fmt-fname)
 (def c-fmt-dir      d/c-fmt-dir)
-(def c-base-fname   "vircurex")
+(def c-base-fname   d/c-base-fname)
 
 (defmacro dbg[x] `(let [x# ~x] (println "analyze.dbg:" '~x "=" x#) x#))
 
@@ -66,11 +66,12 @@
   (and (<= (compare x i) 0)
        (<= (compare i y) 0)))
 
-(defn s-between [x i y] (if (between? x i y) i nil))
+(defn s-between [x str-i y] (if (between? x str-i y) str-i nil))
 
 (defn str-between
-  ([x i]   (s-between x x i))
-  ([x i y] (s-between x i y)))
+  "Returns str-i if alphanumericaly str-x <= str-i <= str-y otherwise nil"
+  ([str-x str-i]       (s-between str-x str-x str-i))
+  ([str-x str-i str-y] (s-between str-x str-i str-y)))
 
 (defn dirs-between [date-from date-to]
   (let [dir-between (str-between (fullpath date-from) (fullpath date-to))]
@@ -79,14 +80,19 @@
 
 (defn filepaths-between [path x y]
   (remove nil?
-          (map #(str-between x (str path %) y) (into [] (sort (fs/list-dir path))))))
+          (map #(str-between x (str path %) y)
+               (into [] (sort (fs/list-dir path))))))
 
 (defn all-filepaths-between [date-from date-to]
+  "TODO all-filepaths-between: implement for the YYYY/MM/DD/vircurex.*.xml file structure"
   (let [from (filepath date-from)
         to   (filepath date-to)]
     (reduce into []
             (remove empty?
-                    (map #(filepaths-between % from to) (dirs-between date-from date-to))))))
+                    (filepaths-between d/c-save-dir from to)
+                    ;; (map #(filepaths-between % from to)
+                    ;;      (dirs-between date-from date-to))
+                    ))))
 
 ; TODO see https://github.com/nathell/clj-tagsoup
 ; TODO see https://github.com/cgrand/enlive

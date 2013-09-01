@@ -14,7 +14,8 @@
                   (str "C:" c-fsep "cygwin" c-fsep "home" c-fsep
                        (System/getProperty "user.name"))
                   (System/getProperty "user.home")))
-(def c-save-dir (str c-home-dir c-fsep "vircurex" c-fsep))
+
+(def c-save-dir (str c-home-dir c-fsep "vircurex-flat" c-fsep))
 ;(def c-fsep "/") ; file.separator is not detected properly for cygwin
 
 (def c-str-fmt-dir (str "yyyy" c-fsep "MM" c-fsep "dd"))
