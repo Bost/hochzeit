@@ -16,6 +16,7 @@
             [clojure.xml :as xml]
             [clojure.java.io :as io]
             [clojure.pprint :as pp]
+            [clojure.math.combinatorics :as combo]
             [liberator.util :only [parse-http-date http-date] :as du])
   (:gen-class))
 
@@ -120,20 +121,32 @@
                           (a/past-date download-date)
                           download-date)
         cur-pairs (currency-pairs save-dir download-date files-to-analyze)
-        keyword0 (keyword (str (nth cur-pairs 0)))
-        keyword1 (keyword (str (nth cur-pairs 1)))
-        cpv-all-tstamps (currency-pair-values-for-all-tstamps save-dir
-                                                              download-date
-                                                              files-to-analyze
-                                                              cur-pairs)
-        base-file-names (map basename files-to-analyze)]
+        kv (map #(keyword (str %)) (into ['tstamp] cur-pairs))
+        cp-vals (into [] (currency-pair-values-for-all-tstamps
+                          save-dir
+                          download-date
+                          files-to-analyze
+                          cur-pairs))
+        base-file-names (map basename files-to-analyze)
+        tstamps (into [] (map #(fname-tstamp %) base-file-names))
+        ]
     ;; pretty print table
     (print-table
-     [:tstamp keyword0 keyword1]
-     (into [] (map #(hash-map :tstamp  (fname-tstamp %1)
-                              keyword0 (nth %2 0)
-                              keyword1 (nth %2 1))
-                   base-file-names (into [] cpv-all-tstamps))))))
+     (dbg kv)
+     ;; [
+     ;;  {:[:EUR :BTC] 0.01219512, :tstamp 2013-04-14_11-50-26, :[:PPC :USD] 0.12100001}
+     ;;  {:[:EUR :BTC] 0.01219512, :tstamp 2013-04-14_11-50-27, :[:PPC :USD] 0.12100001}
+     ;;  {:[:EUR :BTC] 0.01219512, :tstamp 2013-04-14_11-51-39, :[:PPC :USD] 0.12100001}
+     ;;  {:[:EUR :BTC] 0.01219512, :tstamp 2013-04-14_11-51-40, :[:PPC :USD] 0.12100001}
+     ;;]
+     (dbg (into [] (map #(hash-map
+                     (nth kv 0) %1
+                     (nth kv 1) (nth %2 0)
+                     (nth kv 2) (nth %2 1))
+                     (dbg tstamps)
+                     (dbg cp-vals)
+                     )))
+     )))
 
 (defn download! [src-uri save-dir-unfixed]
   (let [save-dir (d/fix-dir-name save-dir-unfixed)]
