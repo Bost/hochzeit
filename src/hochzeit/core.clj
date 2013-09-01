@@ -1,5 +1,6 @@
 (ns hochzeit.core
   (:use [clojure.data.zip.xml] ;s:only [attr text xml-> xml1->]
+        [clojure.pprint]
         ;[taoensso.timbre :as timbre :only (trace debug info warn error fatal spy)]
         ;[incanter.core :as ico]
         [incanter.stats :as ist]
@@ -59,8 +60,8 @@
 ;=> (= combine create-pairs)
 ;true
 (defn currency-pairs [save-dir date files]
-  [[:EUR :BTC]])
-  ;[[:EUR :BTC] [:PPC :USD]])
+  ;; [[:EUR :BTC]])
+  [[:EUR :BTC] [:PPC :USD]])
   ;(a/combine (all-currencies save-dir date files)))
 
 (defn get-vals [zpp tag-0-1 tag-2 out-type]
@@ -70,8 +71,6 @@
       (if (= out-type :headers)
         tag-0-1
         v))))
-
-(defn fmt [x] (format (str "%" c-fmt-len "s") x))
 
 (defn get-zipped [fname-xml]
   (zip/xml-zip (xml/parse fname-xml)))
@@ -106,18 +105,6 @@
         (.length (str c-base-fname "."))
         (- (.length fname) (.length ".xml"))))
 
-(defn print-header! [currency-pairs]
-  (println
-    (dorun
-      (map #(print (fmt %))
-           (into [" "] currency-pairs)))))
-
-(defn print-table! [tstamp-cp-values]
-  (doseq [tstamp-values tstamp-cp-values]
-    (let [tstamp (fname-tstamp (first tstamp-values))]
-      (println
-        (dorun (map #(print (fmt %))
-                    (into [tstamp] (second tstamp-values))))))))
 
 (defn basename [filepath]
   (.substring filepath
@@ -127,17 +114,26 @@
 (defn analyze! [download-date save-dir-unfixed]
   "save-dir-unfixed - means add a file.separator at the end if there isn't any"
   (let [save-dir (d/fix-dir-name save-dir-unfixed)
-        files-to-analyze (a/all-filepaths-between (a/past-date download-date)
-                                           download-date)
+        files-to-analyze (a/all-filepaths-between
+                          a/c-flat-fs
+                          c-save-dir
+                          (a/past-date download-date)
+                          download-date)
         cur-pairs (currency-pairs save-dir download-date files-to-analyze)
+        keyword0 (keyword (str (nth cur-pairs 0)))
+        keyword1 (keyword (str (nth cur-pairs 1)))
         cpv-all-tstamps (currency-pair-values-for-all-tstamps save-dir
                                                               download-date
                                                               files-to-analyze
                                                               cur-pairs)
-        base-file-names (map basename files-to-analyze)
-        tstamp-cp-values (map vector base-file-names cpv-all-tstamps)]
-    (print-header! cur-pairs)
-    (print-table! tstamp-cp-values)))
+        base-file-names (map basename files-to-analyze)]
+    ;; pretty print table
+    (print-table
+     [:tstamp keyword0 keyword1]
+     (into [] (map #(hash-map :tstamp  (fname-tstamp %1)
+                              keyword0 (nth %2 0)
+                              keyword1 (nth %2 1))
+                   base-file-names (into [] cpv-all-tstamps))))))
 
 (defn download! [src-uri save-dir-unfixed]
   (let [save-dir (d/fix-dir-name save-dir-unfixed)]
@@ -148,10 +144,10 @@
 (def c-date (tce/from-date (du/parse-http-date
                             ;"Thu, 23 Apr 2013 22:51:00 GMT")))
                             ;"Thu, 19 Apr 2013 05:05:04 GMT")))
-                            "Thu, 18 Apr 2013 00:00:00 GMT")))
+                            ;; "Thu, 18 Apr 2013 00:00:00 GMT")))
                             ;"Thu, 19 Apr 2013 00:00:00 GMT")))
                             ;"Thu, 20 Apr 2013 00:00:00 GMT")))
-                            ;"Thu, 15 Apr 2013 11:54:00 GMT")))
+                            "Thu, 14 Apr 2013 11:54:00 GMT")))
                             ;"Thu, 23 Apr 2013 10:00:04 GMT")))
 
 (defn -main []
@@ -168,8 +164,11 @@
 (defn cpv [download-date save-dir-unfixed]
   "Currency-Pair-Values; save-dir-unfixed - means add a file.separator at the end if there isn't any"
   (let [save-dir (d/fix-dir-name save-dir-unfixed)
-        files-to-analyze (a/all-filepaths-between (a/past-date download-date)
-                                           download-date)
+        files-to-analyze (a/all-filepaths-between
+                          a/c-flat-fs
+                          c-save-dir
+                          (a/past-date download-date)
+                          download-date)
         cur-pairs (currency-pairs save-dir download-date files-to-analyze)
         cpv-all-tstamps (currency-pair-values-for-all-tstamps save-dir
                                                               download-date

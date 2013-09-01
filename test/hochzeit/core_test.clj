@@ -5,7 +5,7 @@
 
 (deftest a-test
   (testing "File system utilities"
-    (is (= (c/basename "/home/bambi/vircurex/2013/04/19/vircurex.2013-04-19_07-50-03.xml")
+    (is (= (c/basename "/path/to/files/2013/04/19/vircurex.2013-04-19_07-50-03.xml")
            "vircurex.2013-04-19_07-50-03.xml"))))
 
 
