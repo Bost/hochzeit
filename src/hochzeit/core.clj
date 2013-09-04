@@ -61,9 +61,11 @@
 ;=> (= combine create-pairs)
 ;true
 (defn currency-pairs [save-dir date files]
+  "Return currency pais a la [[:EUR :BTC] [:PPC :USD]]"
   ;; [[:EUR :BTC]])
   [[:EUR :BTC] [:PPC :USD]])
-  ;(a/combine (all-currencies save-dir date files)))
+  ;; [[:EUR :BTC] [:PPC :USD] [:NMC :EUR]])
+  ;; (a/combine (all-currencies save-dir date files)))
 
 (defn get-vals [zpp tag-0-1 tag-2 out-type]
   "Get rid of the (if ...)'s to gain speed"
@@ -121,7 +123,7 @@
                           (a/past-date download-date)
                           download-date)
         cur-pairs (currency-pairs save-dir download-date files-to-analyze)
-        kv (map #(keyword (str %)) (into ['tstamp] cur-pairs))
+        kv (map #(keyword (str %)) (into [] cur-pairs))
         cp-vals (into [] (currency-pair-values-for-all-tstamps
                           save-dir
                           download-date
@@ -132,21 +134,34 @@
         ]
     ;; pretty print table
     (print-table
-     (dbg kv)
+     (dbg (vector (keyword "tstamp") kv))
      ;; [
-     ;;  {:[:EUR :BTC] 0.01219512, :tstamp 2013-04-14_11-50-26, :[:PPC :USD] 0.12100001}
-     ;;  {:[:EUR :BTC] 0.01219512, :tstamp 2013-04-14_11-50-27, :[:PPC :USD] 0.12100001}
-     ;;  {:[:EUR :BTC] 0.01219512, :tstamp 2013-04-14_11-51-39, :[:PPC :USD] 0.12100001}
-     ;;  {:[:EUR :BTC] 0.01219512, :tstamp 2013-04-14_11-51-40, :[:PPC :USD] 0.12100001}
+     ;;  { :tstamp 2013-04-14_11-50-26, :[:EUR :BTC] 0.01219512, :[:PPC :USD] 0.12100001 }
+     ;;  { :tstamp 2013-04-14_11-50-27, :[:EUR :BTC] 0.01219512, :[:PPC :USD] 0.12100001 }
+     ;;  { :tstamp 2013-04-14_11-51-39, :[:EUR :BTC] 0.01219512, :[:PPC :USD] 0.12100001 }
+     ;;  { :tstamp 2013-04-14_11-51-40, :[:EUR :BTC] 0.01219512, :[:PPC :USD] 0.12100001 }
      ;;]
-     (dbg (into [] (map #(hash-map
-                     (nth kv 0) %1
-                     (nth kv 1) (nth %2 0)
-                     (nth kv 2) (nth %2 1))
-                     (dbg tstamps)
-                     (dbg cp-vals)
-                     )))
-     )))
+     ;; (for [t tstamps   k kv  cp cp-vals] [t  k  (nth cp (.indexOf k))])
+
+     ;; (def pval (into [] (for [k kv  cp cp-vals] [k (nth cp (.indexOf kv k))])))
+     ;; (def half-pval (range 1 (+ 1 (/ (count pval) 2))))
+     ;; (def combs (into [] (map #(concat (nth pval (- % 1))  (nth pval (- (* 2 %) 1)) ) half-pval)))
+     ;; (def vcombs (into [] (map #(into [] %) combs)))
+     ;; (def almost (into [] (map #(into [] (concat %1 [:tstamp %2])) vcombs tstamps)))
+     (dbg
+     (into []
+           ;; (map #(hash-map
+           ;;      (nth kv 0) %1
+           ;;      (nth kv 1) (nth %2 0)
+           ;;      (nth kv 2) (nth %2 1))
+           ;;      (dbg tstamps)
+           ;;      (dbg cp-vals)
+           (for [t tstamps
+                 k kv
+                 cp cp-vals]
+             (hash-map (keyword "tstamp") (str t)  k  (nth cp (.indexOf kv k))))
+           )))
+     ))
 
 (defn download! [src-uri save-dir-unfixed]
   (let [save-dir (d/fix-dir-name save-dir-unfixed)]
