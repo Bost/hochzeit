@@ -67,11 +67,16 @@
   ;; [[:EUR :BTC] [:PPC :USD] [:NMC :EUR]])
   ;; (a/combine (all-currencies save-dir date files)))
 
-(defn get-vals [zpp tag-0-1 tag-2 out-type]
-  "Get rid of the (if ...)'s to gain speed"
-  (let [v (xml1-> zpp (first tag-0-1) (second tag-0-1) tag-2 text)]
+(defn get-vals [zipped-xml-file tag-0-1 tag-2 out-type]
+  "Get exchange values for a given currenty-pair (tag-0-1 = [:EUR :BTC]) from zipped-xml-file."
+  "Example: [:EUR :BTC] 0.01219512"
+  (let [v (xml1-> zipped-xml-file
+                  (first tag-0-1)    ; :EUR
+                  (second tag-0-1)   ; :BTC
+                  tag-2              ; :highest-bid
+                  text)]             ; get textual contents (the xml1-> stuff)
     (if (not (nil? v))
-      (if (= out-type :headers)
+      (if (= out-type :headers)    ; Get rid of the (if ...)'s to gain speed
         tag-0-1
         v))))
 
@@ -85,9 +90,9 @@
     ;(map #(get-vals zpp % :highest-bid :vals) pairs)))
 
 (defn currency-pair-values-for-all-tstamps [save-dir date files cpairs]
-  (for [zpp (a/do-func get-zipped (full-paths files))]
+  (for [zipped-xml-file (a/do-func get-zipped (full-paths files))]
     (for [cp cpairs]
-      (get-vals zpp cp :highest-bid :vals))))
+      (get-vals zipped-xml-file cp :highest-bid :vals))))
 
 ; Wrap java.io.file methods
 (defn is-file? [f] (.isFile f))
@@ -108,11 +113,33 @@
         (.length (str c-base-fname "."))
         (- (.length fname) (.length ".xml"))))
 
-
 (defn basename [filepath]
   (.substring filepath
              (- (.length filepath) (+ (.length c-base-fname) (.length c-str-fmt-name) 2 3 ))
              (.length filepath)))
+
+(defn pval [keywords cp-vals]
+  (into [] (for [k (dbg keywords)
+                 cp (dbg cp-vals)]
+             [k (nth cp (.indexOf keywords k))])))
+
+(defn idx-half-vect [vect]
+  "Return a vector of indexes half of the size of vect, starting from 1. Example:"
+  "hochzeit.core> (idx-half-vect ['a 'b 'c 'd 'e])"
+  "(1 2 3)"
+  (range 1 (+ 1 (/ (count vect) 2))))
+
+(defn combs [pval idx-half-vect]
+  (into [] (map #(concat (nth pval (- % 1))  (nth pval (- (* 2 %) 1)) ) idx-half-vect)))
+
+(defn vcombs [combs]
+  (into [] (map #(into [] %) combs)))
+
+;; (defn almost [combs tstamps]
+;;   (let [vcombs (vcombs combs)
+;;         tstamps]
+;;   (into [] (map #(into [] (concat %1 [:tstamp %2]))
+;;                 vcombs tstamps))))
 
 (defn analyze! [download-date save-dir-unfixed]
   "save-dir-unfixed - means add a file.separator at the end if there isn't any"
@@ -133,8 +160,6 @@
         tstamps (into [] (map #(fname-tstamp %) base-file-names))
         ]
     ;; pretty print table
-    (print-table
-     (dbg (vector (keyword "tstamp") kv))
      ;; [
      ;;  { :tstamp 2013-04-14_11-50-26, :[:EUR :BTC] 0.01219512, :[:PPC :USD] 0.12100001 }
      ;;  { :tstamp 2013-04-14_11-50-27, :[:EUR :BTC] 0.01219512, :[:PPC :USD] 0.12100001 }
@@ -142,25 +167,22 @@
      ;;  { :tstamp 2013-04-14_11-51-40, :[:EUR :BTC] 0.01219512, :[:PPC :USD] 0.12100001 }
      ;;]
      ;; (for [t tstamps   k kv  cp cp-vals] [t  k  (nth cp (.indexOf k))])
-
-     ;; (def pval (into [] (for [k kv  cp cp-vals] [k (nth cp (.indexOf kv k))])))
-     ;; (def half-pval (range 1 (+ 1 (/ (count pval) 2))))
-     ;; (def combs (into [] (map #(concat (nth pval (- % 1))  (nth pval (- (* 2 %) 1)) ) half-pval)))
-     ;; (def vcombs (into [] (map #(into [] %) combs)))
-     ;; (def almost (into [] (map #(into [] (concat %1 [:tstamp %2])) vcombs tstamps)))
-     (dbg
-     (into []
-           ;; (map #(hash-map
-           ;;      (nth kv 0) %1
-           ;;      (nth kv 1) (nth %2 0)
-           ;;      (nth kv 2) (nth %2 1))
-           ;;      (dbg tstamps)
-           ;;      (dbg cp-vals)
-           (for [t tstamps
-                 k kv
-                 cp cp-vals]
-             (hash-map (keyword "tstamp") (str t)  k  (nth cp (.indexOf kv k))))
-           )))
+    ;; (print-table
+    ;;  (dbg (vector (keyword "tstamp") kv))
+    ;;  (dbg
+    ;;  (into []
+    ;;        ;; (map #(hash-map
+    ;;        ;;      (nth kv 0) %1
+    ;;        ;;      (nth kv 1) (nth %2 0)
+    ;;        ;;      (nth kv 2) (nth %2 1))
+    ;;        ;;      (dbg tstamps)
+    ;;        ;;      (dbg cp-vals)
+    ;;        (for [t tstamps
+    ;;              k kv
+    ;;              cp cp-vals]
+    ;;          (hash-map (keyword "tstamp") (str t)  k  (nth cp (.indexOf kv k))))
+    ;;        )))
+    (pprint (pval kv cp-vals))
      ))
 
 (defn download! [src-uri save-dir-unfixed]

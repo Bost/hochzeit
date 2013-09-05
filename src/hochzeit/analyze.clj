@@ -48,6 +48,7 @@
              [x y])))
 
 (defn do-func [func files]
+  "Apply func to all files (like map)"
   ; for builds a lazy seq; doseq is for executing side-effects and returns nil
   (remove nil?
           (for [file files]
