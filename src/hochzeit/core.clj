@@ -58,6 +58,17 @@
             ;(into #{} ;hash-set filters out the duplicates
                   ;(reduce into cur))))))
 
+(defn x [save-dir download-date files-to-analyze]
+  "=> (x c-save-dir c-date "/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml")"
+  "[: nil]"
+  (let [z (get-zipped "/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml")
+        ;; cp [:EUR :BTC]
+        cp (currency-pairs save-dir download-date files-to-analyze)]
+    [
+     (keyword (str (get-vals z cp :highest-bid :headers)))
+     (get-vals z cp :highest-bid :vals)
+     ]))
+
 ;=> (= combine create-pairs)
 ;true
 (defn currency-pairs [save-dir date files]
@@ -69,14 +80,18 @@
 
 (defn get-vals [zipped-xml-file tag-0-1 tag-2 out-type]
   "Get exchange values for a given currenty-pair (tag-0-1 = [:EUR :BTC]) from zipped-xml-file."
-  "Example: [:EUR :BTC] 0.01219512"
+  "Examples: "
+  "=> (get-vals (get-zipped \"/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml\") [:EUR :BTC] :highest-bid :vals)"
+  "\"0.01219512\""
+  "=> (get-vals (get-zipped \"/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml\") [:EUR :BTC] :highest-bid :headers)"
+  "[:EUR :BTC]"
   (let [v (xml1-> zipped-xml-file
                   (first tag-0-1)    ; :EUR
                   (second tag-0-1)   ; :BTC
                   tag-2              ; :highest-bid
                   text)]             ; get textual contents (the xml1-> stuff)
     (if (not (nil? v))
-      (if (= out-type :headers)    ; Get rid of the (if ...)'s to gain speed
+      (if (= out-type :headers); get rid of the (if ...)'s to gain speed
         tag-0-1
         v))))
 
@@ -118,10 +133,15 @@
              (- (.length filepath) (+ (.length c-base-fname) (.length c-str-fmt-name) 2 3 ))
              (.length filepath)))
 
-(defn pval [keywords cp-vals]
-  (into [] (for [k (dbg keywords)
-                 cp (dbg cp-vals)]
-             [k (nth cp (.indexOf keywords k))])))
+(defn pval [columns matrix]
+  "Get columns from matrix:"
+  "columns = [':k1 ':k2]"
+  "matrix  = ['(11 12) '(21 22) '(31 32)]"
+  "=> (pval columns matrix)"
+  "[[:k1 11] [:k1 21] [:k1 31] [:k2 12] [:k2 22] [:k2 32]]"
+  (into [] (for [k  columns
+                 cp matrix]
+             [k (nth cp (.indexOf columns k))])))
 
 (defn idx-half-vect [vect]
   "Return a vector of indexes half of the size of vect, starting from 1. Example:"
