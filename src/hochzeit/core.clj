@@ -39,7 +39,6 @@
 ;;debugging parts of expressions
 (defmacro dbg [x] `(let [x# ~x] (println "core.dbg:" '~x "=" x#) x#))
 
-;(def c-fsep (System/getProperty "file.separator"))
 (def c-fsep         d/c-fsep)
 (def c-save-dir     d/c-save-dir)
 (def c-str-fmt-name d/c-str-fmt-name)
@@ -58,25 +57,16 @@
             ;(into #{} ;hash-set filters out the duplicates
                   ;(reduce into cur))))))
 
-(defn x [save-dir download-date files-to-analyze]
-  "=> (x c-save-dir c-date "/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml")"
-  "[: nil]"
-  (let [z (get-zipped "/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml")
-        ;; cp [:EUR :BTC]
-        cp (currency-pairs save-dir download-date files-to-analyze)]
-    [
-     (keyword (str (get-vals z cp :highest-bid :headers)))
-     (get-vals z cp :highest-bid :vals)
-     ]))
-
 ;=> (= combine create-pairs)
 ;true
 (defn currency-pairs [save-dir date files]
   "Return currency pais a la [[:EUR :BTC] [:PPC :USD]]"
-  ;; [[:EUR :BTC]])
-  [[:EUR :BTC] [:PPC :USD]])
-  ;; [[:EUR :BTC] [:PPC :USD] [:NMC :EUR]])
-  ;; (a/combine (all-currencies save-dir date files)))
+  ;; [[:EUR :BTC]]
+  [[:EUR :BTC] [:BTC :EUR]]
+  ;; [[:EUR :BTC] [:PPC :USD]]
+  ;; [[:EUR :BTC] [:PPC :USD] [:NMC :EUR]]
+  ;; (a/combine (all-currencies save-dir date files))
+  )
 
 (defn get-vals [zipped-xml-file tag-0-1 tag-2 out-type]
   "Get exchange values for a given currenty-pair (tag-0-1 = [:EUR :BTC]) from zipped-xml-file."
@@ -98,18 +88,7 @@
 (defn get-zipped [fname-xml]
   (zip/xml-zip (xml/parse fname-xml)))
 
-;(defn zipps [files] ;(a/do-func get-zipped (full-paths files))
-
-;(defn currency-pair-values-for-all-tstamps [save-dir date files pairs]
-  ;(for [zpp (zipps files)]
-    ;(map #(get-vals zpp % :highest-bid :vals) pairs)))
-
-(defn currency-pair-values-for-all-tstamps [save-dir date files cpairs]
-  (for [zipped-xml-file (a/do-func get-zipped (full-paths files))]
-    (for [cp cpairs]
-      (get-vals zipped-xml-file cp :highest-bid :vals))))
-
-; Wrap java.io.file methods
+;; Wrap java.io.file methods
 (defn is-file? [f] (.isFile f))
 (defn get-name [f] (.getName f))
 (defn get-path [f] (.getPath f))
@@ -133,121 +112,91 @@
              (- (.length filepath) (+ (.length c-base-fname) (.length c-str-fmt-name) 2 3 ))
              (.length filepath)))
 
-(defn pval [columns matrix]
-  "Get columns from matrix:"
-  "columns = [':k1 ':k2]"
-  "matrix  = ['(11 12) '(21 22) '(31 32)]"
-  "=> (pval columns matrix)"
-  "[[:k1 11] [:k1 21] [:k1 31] [:k2 12] [:k2 22] [:k2 32]]"
-  (into [] (for [k  columns
-                 cp matrix]
-             [k (nth cp (.indexOf columns k))])))
-
-(defn idx-half-vect [vect]
-  "Return a vector of indexes half of the size of vect, starting from 1. Example:"
-  "hochzeit.core> (idx-half-vect ['a 'b 'c 'd 'e])"
-  "(1 2 3)"
-  (range 1 (+ 1 (/ (count vect) 2))))
-
-(defn combs [pval idx-half-vect]
-  (into [] (map #(concat (nth pval (- % 1))  (nth pval (- (* 2 %) 1)) ) idx-half-vect)))
-
-(defn vcombs [combs]
-  (into [] (map #(into [] %) combs)))
-
-;; (defn almost [combs tstamps]
-;;   (let [vcombs (vcombs combs)
-;;         tstamps]
-;;   (into [] (map #(into [] (concat %1 [:tstamp %2]))
-;;                 vcombs tstamps))))
-
-(defn analyze! [download-date save-dir-unfixed]
-  "save-dir-unfixed - means add a file.separator at the end if there isn't any"
-  (let [save-dir (d/fix-dir-name save-dir-unfixed)
-        files-to-analyze (a/all-filepaths-between
-                          a/c-flat-fs
-                          c-save-dir
-                          (a/past-date download-date)
-                          download-date)
-        cur-pairs (currency-pairs save-dir download-date files-to-analyze)
-        kv (map #(keyword (str %)) (into [] cur-pairs))
-        cp-vals (into [] (currency-pair-values-for-all-tstamps
-                          save-dir
-                          download-date
-                          files-to-analyze
-                          cur-pairs))
-        base-file-names (map basename files-to-analyze)
-        tstamps (into [] (map #(fname-tstamp %) base-file-names))
-        ]
-    ;; pretty print table
-     ;; [
-     ;;  { :tstamp 2013-04-14_11-50-26, :[:EUR :BTC] 0.01219512, :[:PPC :USD] 0.12100001 }
-     ;;  { :tstamp 2013-04-14_11-50-27, :[:EUR :BTC] 0.01219512, :[:PPC :USD] 0.12100001 }
-     ;;  { :tstamp 2013-04-14_11-51-39, :[:EUR :BTC] 0.01219512, :[:PPC :USD] 0.12100001 }
-     ;;  { :tstamp 2013-04-14_11-51-40, :[:EUR :BTC] 0.01219512, :[:PPC :USD] 0.12100001 }
-     ;;]
-     ;; (for [t tstamps   k kv  cp cp-vals] [t  k  (nth cp (.indexOf k))])
-    ;; (print-table
-    ;;  (dbg (vector (keyword "tstamp") kv))
-    ;;  (dbg
-    ;;  (into []
-    ;;        ;; (map #(hash-map
-    ;;        ;;      (nth kv 0) %1
-    ;;        ;;      (nth kv 1) (nth %2 0)
-    ;;        ;;      (nth kv 2) (nth %2 1))
-    ;;        ;;      (dbg tstamps)
-    ;;        ;;      (dbg cp-vals)
-    ;;        (for [t tstamps
-    ;;              k kv
-    ;;              cp cp-vals]
-    ;;          (hash-map (keyword "tstamp") (str t)  k  (nth cp (.indexOf kv k))))
-    ;;        )))
-    (pprint (pval kv cp-vals))
-     ))
-
 (defn download! [src-uri save-dir-unfixed]
   (let [save-dir (d/fix-dir-name save-dir-unfixed)]
     (d/download! src-uri save-dir)))
 
 (def c-src-uri "http://google.com")
               ;"https://vircurex.com/api/get_info_for_currency.xml")
-(def c-date (tce/from-date (du/parse-http-date
-                            ;"Thu, 23 Apr 2013 22:51:00 GMT")))
-                            ;"Thu, 19 Apr 2013 05:05:04 GMT")))
-                            ;; "Thu, 18 Apr 2013 00:00:00 GMT")))
-                            ;"Thu, 19 Apr 2013 00:00:00 GMT")))
-                            ;"Thu, 20 Apr 2013 00:00:00 GMT")))
-                            "Thu, 14 Apr 2013 11:54:00 GMT")))
-                            ;"Thu, 23 Apr 2013 10:00:04 GMT")))
 
-(defn -main []
-  ;(profile :info :Arithmetic (analyze! c-src-uri c-save-dir)))
-  (analyze! c-date c-save-dir))
+(def c-past-date (tce/from-date (du/parse-http-date
+                                 "Thu, 14 Apr 2013 11:54:00 GMT"))
+  )
+
+(def c-date (tce/from-date (du/parse-http-date
+                            ;; "Fri, 06 Sep 2013 01:15:00 GMT"))
+                            ;; "Sat, 06 Jul 2013 00:00:00 GMT"))
+                            ;; "Thu, 06 Jun 2013 00:00:00 GMT"))
+                            ;; "Mon, 05 May 2013 00:00:00 GMT"))
+                            ;; "Thu, 23 Apr 2013 22:51:00 GMT"))
+                            ;; "Thu, 19 Apr 2013 05:05:04 GMT"))
+                            ;; "Thu, 18 Apr 2013 00:00:00 GMT"))
+                            ;; "Thu, 19 Apr 2013 00:00:00 GMT"))
+                            ;; "Thu, 20 Apr 2013 00:00:00 GMT"))
+                            ;; "Thu, 14 Apr 2013 11:54:00 GMT"))
+                            "Thu, 23 Apr 2013 10:00:04 GMT"))
+  )
 
 ;(defn -main [src-uri save-dir-unfixed]
   ;(let [download-date (download! src-uri save-dir-unfixed)]
        ;;[download-date c-date]
     ;(analyze! download-date save-dir-unfixed)))
 
-;(analyze! c-date c-save-dir)
+(defn exchange-rates-for-file [currency-pairs file-to-analyze]
+  "(exchange-rates-for-file [[:EUR :BTC] [:PPC :USD]] \"/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml\")"
+  "{:[:EUR :BTC] \"0.01219512\" :[:PPC :USD] \"0.12100001\"}"
+  (reduce into {}
+          (for [currency-pair currency-pairs]
+            (let [zipped-xml-file (get-zipped file-to-analyze)]
+              {(keyword (str currency-pair))
+               (get-vals zipped-xml-file currency-pair :highest-bid :vals)}))))
 
-(defn cpv [download-date save-dir-unfixed]
-  "Currency-Pair-Values; save-dir-unfixed - means add a file.separator at the end if there isn't any"
-  (let [save-dir (d/fix-dir-name save-dir-unfixed)
-        files-to-analyze (a/all-filepaths-between
-                          a/c-flat-fs
-                          c-save-dir
-                          (a/past-date download-date)
-                          download-date)
-        cur-pairs (currency-pairs save-dir download-date files-to-analyze)
-        cpv-all-tstamps (currency-pair-values-for-all-tstamps save-dir
-                                                              download-date
-                                                              files-to-analyze
-                                                              cur-pairs)]
-        cpv-all-tstamps))
+(defn exchange-rates [currency-pairs files-to-analyze]
+  "(exchange-rates [[:EUR :BTC] [:PPC :USD]]"
+  "                 [\"/home/bost/vircurex-flat/vircurex.2013-05-17_03-05-04.xml\""
+  "                  \"/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml\"])"
+  "Example:"
+  "([:tstamp \"2013-05-17_03-05-04\" :[:EUR :BTC] \"0.010\"] [:[:PPC :USD] \"0.181\"]"
+  " [:tstamp \"2013-05-17_03-05-04\" :[:EUR :BTC] \"0.012\"] [:[:PPC :USD] \"0.121\"]"
+  " ...)"
+  (for [file-to-analyze files-to-analyze]
+    (let [ex-rates (exchange-rates-for-file currency-pairs file-to-analyze)]
+      (into { (keyword "tstamp")
+                   (fname-tstamp (basename file-to-analyze)) }
+                   ex-rates))))
 
+(defn all-exchange-rates [save-dir download-date]
+  "All exchange rates for all curreny pairs up to download-date (TODO <= or just < as download-date?)"
+  "Example: see exchange-rates"
+  (let [files-to-analyze (a/all-filepaths-between a/c-flat-fs
+                                                  c-save-dir
+                                                  ;; (a/past-date download-date)
+                                                  c-past-date
+                                                  download-date)]
+    (exchange-rates (currency-pairs save-dir
+                                    download-date
+                                    files-to-analyze)
+                    files-to-analyze)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn analyze! [download-date save-dir-unfixed]
+  "save-dir-unfixed - means add a file.separator at the end if there isn't any"
+  (
+   ;; count
+   print-table
+   (all-exchange-rates (d/fix-dir-name save-dir-unfixed)
+                                   download-date)))
+
+(defn -main []
+  ;(profile :info :Arithmetic (analyze! c-src-uri c-save-dir)))
+  (analyze! c-date c-save-dir))
+
+(defn count-files [past-date download-date]
+  (count
+   (a/all-filepaths-between a/c-flat-fs
+                            c-save-dir
+                            ;; (a/past-date download-date)
+                            past-date
+                            download-date)))
 
 ;(
  ;([:BTC :BTC] [:BTC :AAA] [:BTC :DVC] [:BTC :EUR])

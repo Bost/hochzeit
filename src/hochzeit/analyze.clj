@@ -56,7 +56,10 @@
               (if (not (.isDirectory file))
                 (func path))))))
 
-(defn past-date [date] (tco/minus date (tco/hours 12)))
+(defn past-date [date]
+  "date minus 12 hours"
+  (tco/minus date (tco/hours 12)))
+
 (defn next-day  [date] (tco/plus date (tco/days 1)))
 (defn dirname   [flat-fs? date]
   "Example: (dirname false (create-date \"Thu, 18 Apr 2013 12:55:00 GMT\"))"
