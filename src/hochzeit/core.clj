@@ -16,6 +16,9 @@
             [clojure.xml :as xml]
             [clojure.java.io :as io]
             [clojure.pprint :as pp]
+
+            [clojure.contrib.math :as math]
+
             [clojure.math.combinatorics :as combo]
             [liberator.util :only [parse-http-date http-date] :as du])
   (:gen-class))
@@ -23,7 +26,6 @@
 ;(def plant-growth (to-matrix (ids/get-dataset :plant-growth)))
 ;(ist/mean (sample-normal 100))
 ;(sample-normal 100)
-
 ; TODO emails
 ; TODO algorithms
 ; TODO automatic trading
@@ -68,7 +70,7 @@
   ;; (a/combine (all-currencies save-dir date files))
   )
 
-(defn get-vals [zipped-xml-file tag-0-1 tag-2 out-type]
+(defn get-vals [zipped-xml-file tag-0-1 tag-2]
   "Get exchange values for a given currenty-pair (tag-0-1 = [:EUR :BTC]) from zipped-xml-file."
   "Examples: "
   "=> (get-vals (get-zipped \"/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml\") [:EUR :BTC] :highest-bid :vals)"
@@ -81,9 +83,7 @@
                   tag-2              ; :highest-bid
                   text)]             ; get textual contents (the xml1-> stuff)
     (if (not (nil? v))
-      (if (= out-type :headers); get rid of the (if ...)'s to gain speed
-        tag-0-1
-        v))))
+      v)))
 
 (defn get-zipped [fname-xml]
   (zip/xml-zip (xml/parse fname-xml)))
@@ -120,8 +120,7 @@
               ;"https://vircurex.com/api/get_info_for_currency.xml")
 
 (def c-past-date (tce/from-date (du/parse-http-date
-                                 "Thu, 14 Apr 2013 11:54:00 GMT"))
-  )
+                                 "Thu, 14 Apr 2013 11:54:00 GMT")))
 
 (def c-date (tce/from-date (du/parse-http-date
                             ;; "Fri, 06 Sep 2013 01:15:00 GMT"))
@@ -149,7 +148,7 @@
           (for [currency-pair currency-pairs]
             (let [zipped-xml-file (get-zipped file-to-analyze)]
               {(keyword (str currency-pair))
-               (get-vals zipped-xml-file currency-pair :highest-bid :vals)}))))
+               (get-vals zipped-xml-file currency-pair :highest-bid)}))))
 
 (defn exchange-rates [currency-pairs files-to-analyze]
   "(exchange-rates [[:EUR :BTC] [:PPC :USD]]"
@@ -170,8 +169,8 @@
   "Example: see exchange-rates"
   (let [files-to-analyze (a/all-filepaths-between a/c-flat-fs
                                                   c-save-dir
-                                                  ;; (a/past-date download-date)
-                                                  c-past-date
+                                                  (a/past-date download-date)
+                                                  ;; c-past-date
                                                   download-date)]
     (exchange-rates (currency-pairs save-dir
                                     download-date
@@ -233,3 +232,36 @@
    ;]
   ;]
  ;]
+
+
+
+;; (clojure.repl/doc clojure.core/with-precision)
+
+;; hochzeit.core> (class 1M)
+;; java.math.BigDecimal
+;; hochzeit.core> (class 1N)
+;; clojure.lang.BigInt
+
+
+;; (with-precision 3 (/ 7M 9))
+;; -> 0.778M
+
+;; (with-precision 1 (/ 7M 9))
+;; -> 0.8M
+
+;; (with-precision 1 :rounding FLOOR (/ 7M 9))
+;; -> 0.7M
+
+(defn round-places [number decimals]
+  (let [factor (math/expt 10 decimals)]
+    (bigdec (/ (math/round (* factor number)) factor))))
+
+(defn round2 [x] (round-places x 2))
+
+(defn x-to-y [x rate] (* x rate))
+
+(defn x-to-y-rounded [x rate] (round2 (* x rate)))
+
+(defn eur-to-usd [x] (x-to-y x 1.3128M))
+
+(defn eur-to-usd-rounded [x] (round2 (eur-to-usd x)))

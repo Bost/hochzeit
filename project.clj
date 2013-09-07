@@ -12,14 +12,28 @@
                  [org.clojure/clojure "1.5.1"]
                  [com.draines/postal "1.10.2"]
 
-                 ;[clojurewerkz/money "1.2.0"]
-
                  [cc.artifice/vijual "0.2.5"] ; simple (console based) graph visualization
                  [rhizome "0.1.4"]            ; graph visualization
                  [incanter "1.5.4"]           ; statistical methods
 
+                 [org.clojure/clojure-contrib "1.2.0"]
+
                  [org.clojure/data.zip "0.1.1"]
-                 [com.taoensso/timbre "1.6.0"]]
-;  :source-paths      ["src/clojure"]
-  :resource-paths    ["src/resources"]
+                 [com.taoensso/timbre "1.6.0"]
+                 [compojure "1.0.4"]         ; for lein-cjlsbuild
+                 [hiccup "1.0.0"]            ; for lein-cjlsbuild
+                 ]
+
+  :plugins [[lein-cljsbuild "0.3.3-SNAPSHOT"]
+            [lein-ring "0.7.0"]]
+
+  :source-paths ["src"]                       ; clj sources
+
+  :cljsbuild {
+              :builds [{:source-paths ["src-cljs"]
+                        :compiler {:output-to "resources/public/js/main.js"
+                                   :optimizations :whitespace
+                                   :pretty-print true}}]}
+  :ring {:handler example.routes/app}
+
   :main hochzeit.core)
