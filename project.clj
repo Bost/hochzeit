@@ -30,7 +30,24 @@
   :source-paths ["src"]                       ; clj sources
 
   :cljsbuild {
-              :builds [{:source-paths ["src-cljs"]
+              ;; Each entry in the :crossovers vector describes a Clojure namespace
+              ;; that is meant to be used with the ClojureScript code as well.
+              ;; The files that make up this namespace will be automatically copied
+              ;; into the ClojureScript source path whenever they are modified.
+              :crossovers [
+                           hochzeit.core
+                           hochzeit.macros
+                           hochzeit.crossover
+                           ]
+              ;; ;; Set the path into which the crossover namespaces will be copied.
+              :crossover-path "crossover-cljs"
+              ;; Set this to true to allow the :crossover-path to be copied into
+              ;; the JAR file (if hooks are enabled).
+              :crossover-jar false
+
+              :builds [{:source-paths ["src-cljs"
+                                       "crossover-cljs"
+                                       ]
                         :compiler {:output-to "resources/public/js/main.js"
                                    :optimizations :whitespace
                                    :pretty-print true}}]}

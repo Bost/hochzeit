@@ -3,7 +3,9 @@
             [clj-time.format :as tf]
             [clj-http.client :as cli]
             [clojure.java.io :as io]
-            [liberator.util :only [parse-http-date http-date] :as du]))
+            ;; [liberator.util :only [parse-http-date http-date] :as du])
+            [liberator.util :as du]
+            ))
 
 (defmacro dbg [x] `(let [x# ~x] (println "download.dbg:" '~x "=" x#) x#))
 

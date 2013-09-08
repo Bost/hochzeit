@@ -1,6 +1,6 @@
 (ns example.views
   (:require
-   [hochzeit.core :as c]
+   ;; [hochzeit.core :as c]
     [hiccup
       [page :refer [html5]]
       [page :refer [include-js]]]))
@@ -15,5 +15,5 @@
      ]
     [:body
       [:h1 "Hello World"]
-     (c/eur-to-usd 100)
+     ;; (c/eur-to-usd 100)
      ]))

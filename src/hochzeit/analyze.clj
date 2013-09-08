@@ -7,10 +7,14 @@
             [clj-time.core :as tco]
             [clojure.zip :as zip]
             [me.raynes.fs :as fs]
-            [liberator.util :only [parse-http-date http-date] :as du]
+
+            ;; [liberator.util :only [parse-http-date http-date] :as du])
+            [liberator.util :as du]
+
             [clj-time.format :as tf]
             [clj-time.coerce :as tce])
-  (:gen-class))
+  ;; (:gen-class)
+  )
 
 (def c-fsep         d/c-fsep)
 (def c-save-dir     d/c-save-dir)
