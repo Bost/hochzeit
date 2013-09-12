@@ -1,18 +1,15 @@
-(function() {
+var bar = function(vals) {
+
+console.log("vals: ", vals);
+var valsLen = vals.length;
 
 var i = 0;
-
-var vals = example.hello.valsx;
-console.log("vals: ", vals);
-
-var valsLen = vals.length;
 
 var next = function(){
     return vals[i++];
 };
 
-var w = 20,
-h = 80;
+var w = 20, h = 80;
 
 var x = d3.scale.linear()
     .domain([0, 1])
@@ -52,4 +49,4 @@ chart.append("line")
     .attr("y2", h - .5)
     .style("stroke", "#000");
 
-})();
+}

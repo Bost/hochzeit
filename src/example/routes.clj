@@ -15,10 +15,9 @@
                 #(if (= "/" %) "/index.html" %)))))
 
 (defroutes main-routes
-  (GET "/" [] (index-page))
-
-  ;; (GET "/" [] (resp/file-response "index.html" {:root "public"}))
-  (GET "/a" [] (ring-resp/resource-response "index.html" {:root "public"}))
+;;(GET "/" [] (resp/file-response "index.html" {:root "public"}))
+  (GET "/" [] (ring-resp/resource-response "index.html" {:root "public"}))
+  (GET "/index-page" [] (index-page))   ; TODO where is index-page defined?
 
   (route/resources "/")
   (route/not-found "Page not found"))

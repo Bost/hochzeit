@@ -11,6 +11,8 @@
                  [me.raynes/fs "1.4.0"]
                  [org.clojure/clojure "1.5.1"]
                  [com.draines/postal "1.10.2"]
+                 [cheshire "5.2.0"]           ; clj -> json
+                 [aleph "0.3.0"]              ; websockets
 
                  [cc.artifice/vijual "0.2.5"] ; simple (console based) graph visualization
                  [rhizome "0.1.4"]            ; graph visualization
@@ -34,19 +36,18 @@
               ;; that is meant to be used with the ClojureScript code as well.
               ;; The files that make up this namespace will be automatically copied
               ;; into the ClojureScript source path whenever they are modified.
-              :crossovers [
-                           hochzeit.core
-                           hochzeit.macros
-                           hochzeit.crossover
-                           ]
-              ;; ;; Set the path into which the crossover namespaces will be copied.
-              :crossover-path "crossover-cljs"
+            ;; :crossovers [
+            ;;              hochzeit.core
+            ;;              hochzeit.crossover
+            ;;              ]
+            ;; ;; Set the path into which the crossover namespaces will be copied.
+            ;; :crossover-path "crossover-cljs"
               ;; Set this to true to allow the :crossover-path to be copied into
               ;; the JAR file (if hooks are enabled).
               :crossover-jar false
 
               :builds [{:source-paths ["src-cljs"
-                                       "crossover-cljs"
+            ;;                         "crossover-cljs"
                                        ]
                         :compiler {:output-to "resources/public/js/main.js"
                                    :optimizations :whitespace
