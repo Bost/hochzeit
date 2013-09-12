@@ -3,6 +3,9 @@
 //   <meta charset="utf-8">
 //   <title>WebSocket echo server test</title>
 //   <script type="text/javascript">
+
+// TODO rewrite websockets.js to clojurescript
+
 var serverUrl = "ws://localhost:8080";
 var ws = new WebSocket(serverUrl);
 
@@ -26,16 +29,31 @@ ws.onclose = function(e) {
     alert("webws closed!");
 };
 
+var obj;
 ws.onmessage = function(e) {
-    console.log("Got message: ", e.data);
+    console.log("Data received: ", e.data);
     var object = JSON.parse(e.data);
     console.log("JSON.parse():", object);
+    // an example for object value:
+    // [{"time":20130517030504,"value":18.1},{"time":20130414115026,"value":12.1}]
+    // TODO make a clojurescript function for up/down scaling of the "value"
+
+    var scaledObj = object;
+    var scaleFactor = 300;
+    for (i in scaledObj) {
+	var newVal = scaledObj[i].value * scaleFactor;
+	scaledObj[i].value = newVal;
+    }
+    obj = object;
+
+    console.log("scaledObj:", scaledObj);
+
     // var object = BSON.deserialize(e.data);
     // console.log("Deserialised message:", object);
     // var chatlog = document.getElementById("chatlog");
     // chatlog.innerHTML += e.data + "<br>\n";
     // console.log("theBar: ", theBar);
-    bar(object);
+    bar(scaledObj);
     return false;
 };
 

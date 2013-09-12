@@ -30,15 +30,13 @@
             ;; [liberator.util :only [parse-http-date http-date] :as du])
             [liberator.util :as du]
             )
-  ;; (:gen-class)
+  (:gen-class)
   )
 
 ;(def plant-growth (to-matrix (ids/get-dataset :plant-growth)))
 ;(ist/mean (sample-normal 100))
 ;(sample-normal 100)
-; TODO emails
-; TODO algorithms
-; TODO automatic trading
+; TODO emails, algorithms,automatic trading
 ; TODO Learn clojure https://github.com/relevance/labrepl.git
 ; TODO search for patterns of code for which there might exist a more idiomatic function or macro https://github.com/jonase/kibit.git
 ;
@@ -111,11 +109,19 @@
                  (filter (fn [f] (re-matches pattern (get-name f))) (filter is-file? ls))
                  (map #(get-xml-files % pattern) (filter d/is-dir? ls)))))))
 
-(defn fname-tstamp [fname]
-  "Extract timestamp form filename"
-  (subs fname
+(defn fname-tstamp-raw [base-fname]
+  "Extract timestamp from base-fname (= basename /path/to/base-fname)"
+  (subs base-fname
         (.length (str c-base-fname "."))
-        (- (.length fname) (.length ".xml"))))
+        (- (.length base-fname) (.length ".xml"))))
+
+(defn replace-in-str [working-str match]
+  (clojure.string/replace working-str match ""))
+
+(defn fname-tstamp [base-fname]
+  (read-string
+   (let [working-str (fname-tstamp-raw base-fname)]
+     (replace-in-str (replace-in-str working-str "-") "_"))))
 
 (defn basename [filepath]
   (.substring filepath
@@ -152,8 +158,7 @@
     ;(analyze! download-date save-dir-unfixed)))
 
 
-
-(defn plain-exchange-rates-for-file [currency-pairs file-to-analyze]
+(defn plain-exchange-rates-for-file-raw [currency-pairs file-to-analyze]
   "(plain-exchange-rates-for-file [[:EUR :BTC]] \"/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml\")"
   "[\"0.01219512\" \"0.12100001\"]"
   (into []
@@ -161,16 +166,16 @@
           (let [zipped-xml-file (get-zipped file-to-analyze)]
             (get-vals zipped-xml-file currency-pair :highest-bid)))))
 
+(defn plain-exchange-rates-for-file [currency-pairs file-to-analyze]
+  (into []
+        (map #(bigdec %) (plain-exchange-rates-for-file-raw currency-pairs file-to-analyze))))
+
 (defn exchange-rates-for-file [currency-pairs file-to-analyze]
   "(exchange-rates-for-file [[:EUR :BTC]] \"/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml\")"
   "{:[:EUR :BTC] \"0.01219512\" :[:PPC :USD] \"0.12100001\"}"
   (reduce into {}
   (let [plain-ex-rates (plain-exchange-rates-for-file currency-pairs file-to-analyze)]
     (map #(hash-map (keyword (str %1)) %2) currency-pairs plain-ex-rates))))
-
-
-(defn f [] (* 1 11))
-(defn s [] "foo")
 
 (defn e [currency-pairs files-to-analyze]
   "(e [[:EUR :BTC] [:PPC :USD]]"
@@ -185,15 +190,15 @@
           tstamp-ex-rates (map #(hash-map :value %2) currency-pairs ex-rates)
           ]
       (into { :time
-              (fname-tstamp (basename file-to-analyze)) }
+             (fname-tstamp (basename file-to-analyze)) }
             tstamp-ex-rates)))
 
-   ;; [{:time 1297110662 :value 88},
-   ;;  {:time 1297110663 :value 33},
-   ;;  {:time 1297110663 :value 51},
-   ;;  {:time 1297110664 :value 53},
-   ;;  {:time 1297110665 :value 58},
-   ;;  {:time 1297110666 :value 59},]
+  ;; [{:time 1297110662 :value 88},
+  ;;  {:time 1297110663 :value 33},
+  ;;  {:time 1297110663 :value 51},
+  ;;  {:time 1297110664 :value 53},
+  ;;  {:time 1297110665 :value 58},
+  ;;  {:time 1297110666 :value 59},]
 
    ;; (into [] (c/e [[:EUR :BTC] [:PPC :USD]]
    ;;               ["/home/bost/vircurex-flat/vircurex.2013-05-17_03-05-04.xml"
