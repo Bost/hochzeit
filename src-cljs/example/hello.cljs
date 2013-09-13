@@ -3,4 +3,4 @@
   ;; )
 )
 
-(js/console.log "ns example.hello executed")
+(js/console.log "ns executed: example.hello")

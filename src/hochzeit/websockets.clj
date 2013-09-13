@@ -44,5 +44,7 @@
 	     (siphon (map* #(render-msg name %) ch) broadcast-channel)
 	     (siphon broadcast-channel ch))))
 
-(defn s []
-     (start-http-server chat-handler {:port 8080 :websocket true}))
+(defn launch-server []
+  "Convenience function. Start REPL, load this namespace, switch in it and launch:"
+  "(launch-server)"
+  (start-http-server chat-handler {:port 8080 :websocket true}))
