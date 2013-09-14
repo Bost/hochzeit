@@ -16,7 +16,7 @@
 
 (set! (.-onerror ws)
       (fn [e]
-        (log "WebWS error")))
+        (log "WebWS error. Websocket server started?")))
 
 (defn on-open [e]
   (.send ws "Jim")

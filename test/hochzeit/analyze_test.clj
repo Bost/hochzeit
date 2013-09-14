@@ -15,14 +15,14 @@
 (def c-save-dir d/c-save-dir)
 (def c-flat-fs a/c-flat-fs)
 
-(deftest create-filename-from-date--positive-test
+(deftest create-fname-from-date--positive-test
   (testing "Create filename from date"
-    (is (= (a/filename (a/create-date "Thu, 17 Apr 2013 21:00:00 GMT"))
+    (is (= (a/fname (a/create-date "Thu, 17 Apr 2013 21:00:00 GMT"))
            "vircurex.2013-04-17_21-00-00.xml")))
-  (testing "Filepaths between from-file and to-file (alphabetical)"
+  (testing "Filepaths between from-f and to-f (alphabetical)"
     (let [path c-save-dir]
     ;; (let [path (str c-save-dir "2013/05/21")]
-    (is (= (a/filepaths-between path
+    (is (= (a/fpaths-between path
                                 ;; from
                                 (str path "vircurex.2013-05-21_04-00-04.xml")
                                 ;; to
@@ -32,7 +32,7 @@
             (str c-save-dir "vircurex.2013-05-21_04-10-04.xml")
             (str c-save-dir "vircurex.2013-05-21_04-15-04.xml")])))))
 
-(deftest file-between--negative-test
+(deftest f-between--negative-test
          (testing "Datename before zero-sized interval"
                   (is (= (a/between? "vircurex.2013-04-19_00-00-01.xml"
                                      "vircurex.2013-04-19_00-00-00.xml"
@@ -54,7 +54,7 @@
                                      "vircurex.2013-04-19_00-00-02.xml")
                          false))))
 
-(deftest file-between--positive-test
+(deftest f-between--positive-test
          (testing "Datename in zero-sized interval (between itself)"
                   (is (= (a/between? "vircurex.2013-04-19_00-00-00.xml"
                                      "vircurex.2013-04-19_00-00-00.xml"
@@ -76,7 +76,7 @@
                                      "vircurex.2013-04-19_00-00-02.xml")
                          true))))
 
-(deftest file-between-retval-negative-test
+(deftest f-between-retval-negative-test
          (testing "Datename before zero-sized interval"
                   (is (= (a/s-between "vircurex.2013-04-19_00-00-01.xml"
                                       "vircurex.2013-04-19_00-00-00.xml"
@@ -98,7 +98,7 @@
                                       "vircurex.2013-04-19_00-00-02.xml")
                          nil))))
 
-(deftest file-between-retval--positive-test
+(deftest f-between-retval--positive-test
          (testing "Datename between itself"
                   (is (= (a/s-between "vircurex.2013-04-19_00-00-00.xml"
                                       "vircurex.2013-04-19_00-00-00.xml"
@@ -121,9 +121,9 @@
                          "vircurex.2013-04-19_00-00-01.xml"))))
 
 
-(deftest one-file
+(deftest one-f
   (testing "Just one file"
-    (is (= (dbg (a/all-filepaths-between
+    (is (= (dbg (a/all-fpaths-between
                  c-flat-fs
                  c-save-dir
                  (a/create-date "Thu, 19 Apr 2013 00:00:00 GMT")
@@ -132,14 +132,14 @@
 
 (deftest fpaths-between--positive-results
          (testing "fpaths: Zero difference between dates"
-           (is (= (a/all-filepaths-between
+           (is (= (a/all-fpaths-between
                    c-flat-fs
                    c-save-dir
                    (a/create-date "Thu, 19 Apr 2013 00:00:00 GMT")
                    (a/create-date "Thu, 19 Apr 2013 00:00:00 GMT"))
                   [])))
          (testing "Files between 17 Apr and 18 Apr"
-           (is (= (a/all-filepaths-between
+           (is (= (a/all-fpaths-between
                    c-flat-fs
                    c-save-dir
                    (a/create-date "Thu, 17 Apr 2013 21:00:00 GMT")
@@ -182,7 +182,7 @@
                    (str c-save-dir "vircurex.2013-04-17_23-55-03.xml")])))
          (testing "Files between 18 Apr and 19 Apr - actually there is none."
            "TODO this may be wrong for flat dir structure."
-           (is (= (a/all-filepaths-between
+           (is (= (a/all-fpaths-between
                    c-flat-fs
                    c-save-dir
                    (a/create-date "Thu, 18 Apr 2013 12:55:00 GMT")
@@ -322,7 +322,7 @@
                    (str c-save-dir "vircurex.2013-04-18_23-50-04.xml")
                    (str c-save-dir "vircurex.2013-04-18_23-55-04.xml")])))
          ;; (testing "1 hour difference between dates. Flat dir structure"
-         ;;   (is (= (a/all-filepaths-between
+         ;;   (is (= (a/all-fpaths-between
          ;;           c-flat-fs
          ;;           c-save-dir
          ;;           (a/create-date "Thu, 19 Apr 2013 01:00:00 GMT")
@@ -330,32 +330,32 @@
          ;;          [(str c-save-dir "vircurex.2013-04-19_01-00-03.xml")
          ;;           (str c-save-dir "vircurex.2013-04-19_01-05-03.xml")])))
          ;; (testing "past-date"
-         ;;   (is (= (a/all-filepaths-between
+         ;;   (is (= (a/all-fpaths-between
          ;;           c-flat-fs
          ;;           c-save-dir
          ;;           (a/create-date "Thu, 18 Apr 2013 12:55:00 GMT")
          ;;           (a/create-date "Thu, 19 Apr 2013 00:00:00 GMT"))
          ;;          [(str c-save-dir "vircurex.2013-04-18_12-55-04.xml")])))
          ;; (testing "1 hour difference between dates. YYYY/MM/DD dir structure"
-         ;;   (is (= (a/all-filepaths-between
+         ;;   (is (= (a/all-fpaths-between
                    ;; c-save-dir
          ;;           (a/create-date "Thu, 19 Apr 2013 01:00:00 GMT")
          ;;           (a/create-date "Thu, 19 Apr 2013 01:10:00 GMT"))
          ;;          [(str c-save-dir "2013/04/19/vircurex.2013-04-19_01-00-03.xml")
          ;;           (str c-save-dir "2013/04/19/vircurex.2013-04-19_01-05-03.xml")])))
          ;; (testing "past-date"
-         ;;   (is (= (a/all-filepaths-between
+         ;;   (is (= (a/all-fpaths-between
                    ;; c-save-dir
          ;;           (a/create-date "Thu, 18 Apr 2013 12:55:00 GMT")
          ;;           (a/create-date "Thu, 19 Apr 2013 00:00:00 GMT"))
          ;;          [(str c-save-dir "2013/04/18/vircurex.2013-04-18_12-55-04.xml")])))
          )
 
-(create-filename-from-date--positive-test)
-(file-between--negative-test)
-(file-between--positive-test)
-(file-between-retval-negative-test)
-(file-between-retval--positive-test)
+(create-fname-from-date--positive-test)
+(f-between--negative-test)
+(f-between--positive-test)
+(f-between-retval-negative-test)
+(f-between-retval--positive-test)
 (fpaths-between--positive-results)
 
 (deftest fullpath--positive-test
@@ -366,8 +366,8 @@
     (is (= (a/fullpath false c-save-dir (a/create-date "Thu, 18 Apr 2013 12:55:00 GMT"))
            (str c-save-dir "2013/04/18/")))))
 
-;; TODO write a test for filepath
-;; (defn filepath  [flat-fs? path date] (str (fullpath flat-fs? path date) (filename date)))
+;; TODO write a test for fpath
+;; (defn fpath  [flat-fs? path date] (str (fullpath flat-fs? path date) (fname date)))
 
 (deftest dirname--positive-test
   (testing "File structure: flat"

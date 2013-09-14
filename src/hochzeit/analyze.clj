@@ -38,7 +38,7 @@
                    (for [c (:content kids-of)]
                      (:tag c))))))
 
-;(def hs-currencies (into #{} (reduce into (analyze/do-parse files analyze/currencies))))
+;(def hs-currencies (into #{} (reduce into (analyze/do-parse fs analyze/currencies))))
 ;;=> (println "hs-currencies: " hs-currencies)
 ;;"hs-currencies: " #{:PPC :BTC :USD :NMC :CHF :LTC :SC :TRC :IXC :EUR :DVC}
 
@@ -51,13 +51,13 @@
                  :when (not (= x y))]
              [x y])))
 
-(defn do-func [func files]
+(defn do-func [func fs]
   "Apply func to all files (like map)"
   ; for builds a lazy seq; doseq is for executing side-effects and returns nil
   (remove nil?
-          (for [file files]
-            (let [path (.getPath file)]
-              (if (not (.isDirectory file))
+          (for [f fs]
+            (let [path (.getPath f)]
+              (if (not (.isDirectory f))
                 (func path))))))
 
 (defn past-date [date]
@@ -72,9 +72,9 @@
     ""
     (tf/unparse c-fmt-dir date)))
 
-(defn filename  [date] (str c-base-fname "." (tf/unparse c-fmt-fname date) ".xml"))
+(defn fname  [date] (str c-base-fname "." (tf/unparse c-fmt-fname date) ".xml"))
 (defn fullpath  [flat-fs? path date] (str path (dirname flat-fs? date) (if flat-fs? "" c-fsep)))
-(defn filepath  [flat-fs? path date] (str (fullpath flat-fs? path date) (filename date)))
+(defn fpath  [flat-fs? path date] (str (fullpath flat-fs? path date) (fname date)))
 ; create-date is for debug purposes
 (defn create-date [s]    (tce/from-date (du/parse-http-date s)))
 
@@ -94,19 +94,19 @@
     (if (not (nil? dir-between))
       (into [dir-between] (dirs-between (next-day date-from) date-to)))))
 
-(defn filepaths-between [path x y]
+(defn fpaths-between [path x y]
   (remove nil?
           (map #(str-between x (str path %) y)
                (into [] (sort (fs/list-dir path))))))
 
-(defn all-filepaths-between [flat-fs? path date-from date-to]
-  "TODO all-filepaths-between: implement for the YYYY/MM/DD/vircurex.*.xml file structure"
-  (let [from (filepath flat-fs? path date-from)
-        to   (filepath flat-fs? path date-to)]
+(defn all-fpaths-between [flat-fs? path date-from date-to]
+  "TODO all-fpaths-between: implement for the YYYY/MM/DD/vircurex.*.xml f structure"
+  (let [from (fpath flat-fs? path date-from)
+        to   (fpath flat-fs? path date-to)]
     (into []
             (remove empty?
-                    (filepaths-between path from to)
-                    ;; (map #(filepaths-between % from to)
+                    (fpaths-between path from to)
+                    ;; (map #(fpaths-between % from to)
                     ;;      (dirs-between date-from date-to))
                     ))))
 

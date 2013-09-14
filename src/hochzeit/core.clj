@@ -223,11 +223,11 @@
 (defn all-exchange-rates [save-dir download-date]
   "All exchange rates for all curreny pairs up to download-date (TODO <= or just < as download-date?)"
   "Example: see exchange-rates"
-  (let [files-to-analyze (a/all-filepaths-between a/c-flat-fs
-                                                  c-save-dir
-                                                  (a/past-date download-date)
-                                                  ;; c-past-date
-                                                  download-date)]
+  (let [files-to-analyze (a/all-fpaths-between a/c-flat-fs
+                                               c-save-dir
+                                               (a/past-date download-date)
+                                               ;; c-past-date
+                                               download-date)]
     (exchange-rates (currency-pairs save-dir
                                     download-date
                                     files-to-analyze)
@@ -247,11 +247,11 @@
 
 (defn count-files [past-date download-date]
   (count
-   (a/all-filepaths-between a/c-flat-fs
-                            c-save-dir
-                            ;; (a/past-date download-date)
-                            past-date
-                            download-date)))
+   (a/all-fpaths-between a/c-flat-fs
+                         c-save-dir
+                         ;; (a/past-date download-date)
+                         past-date
+                         download-date)))
 
 ;(
  ;([:BTC :BTC] [:BTC :AAA] [:BTC :DVC] [:BTC :EUR])
