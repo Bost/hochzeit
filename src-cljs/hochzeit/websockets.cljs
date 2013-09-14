@@ -1,5 +1,5 @@
 (ns hochzeit.websockets
-  )
+  (:require [hochzeit.bar :as bar]))
 
 (defn log [& args]
   "TODO it might be better to turn fn log to a macro"
@@ -9,8 +9,6 @@
 (def server-url "ws://localhost:8080")
 (def serverUrl server-url)
 (def ws (new js/WebSocket server-url))
-
-;; (log "ws: " ws)
 
 (set! (.-onclose ws)
       (fn [e]
@@ -40,9 +38,10 @@
   (let [obj (.parse js/JSON (.-data e))
         obj-copy (copy obj)]
     (scale! obj-copy 300)
-    (js/bar obj-copy)))
+    (bar/bar-chart js/d3 obj-copy)))
   
 (set! (.-onmessage ws) on-message)
+
 
 (defn connect []
   (.send ws "Jim"))
