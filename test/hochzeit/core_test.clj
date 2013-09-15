@@ -5,16 +5,24 @@
 
 (deftest a-test
   (testing "File system utilities"
-    (is (= (c/basename "/path/to/files/2013/04/19/vircurex.2013-04-19_07-50-03.xml")
+    (is (= (basename "/path/to/files/2013/04/19/vircurex.2013-04-19_07-50-03.xml")
            "vircurex.2013-04-19_07-50-03.xml")))
 
-  (testing "e"
-    (is (= (plain-exchange-rates-for-file-raw [[:EUR :BTC] [:PPC :USD]]
-              "/home/bost/vircurex-flat/vircurex.2013-05-17_03-05-04.xml")
-           ["0.01054073" "0.18"])
-    (is (= (plain-exchange-rates-for-file-raw [[:EUR :BTC] [:PPC :USD]]
-               "/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml")
-           ["0.01219512" "0.12100001"]))))
+  (testing "Testing functions for the fn time-value-pairs"
+    (is (= (plain-x-rates-for-file-raw [[:EUR :BTC] [:PPC :USD]]
+                                       "/home/bost/vircurex-flat/vircurex.2013-05-17_03-05-04.xml")
+           ["0.01054073" "0.18"]))
+    (is (= (plain-x-rates-for-file-raw [[:EUR :BTC] [:PPC :USD]]
+                                       "/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml")
+           ["0.01219512" "0.12100001"]))
+
+    (is (= (time-value-pairs [[:EUR :BTC]]
+                             ["/home/bost/vircurex-flat/vircurex.2013-05-17_03-05-04.xml"
+                              "/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml"
+                              "/home/bost/vircurex-flat/vircurex.2013-05-25_17-10-03.xml"])
+           '({:time 20130517030504 :value 0.01054073M}
+             {:time 20130414115026 :value 0.01219512M}
+             {:time 20130525171003 :value 0.00944465M}))))
 
   (testing "fname-tstamp-raw"
     (is (= (fname-tstamp-raw "vircurex.2013-05-17_03-05-04.xml")

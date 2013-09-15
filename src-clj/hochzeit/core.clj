@@ -26,7 +26,7 @@
             [clojure.pprint :as pp]
 
             [clojure.math.combinatorics :as combo]
-
+            [incanter.stats :as stats]
             ;; [liberator.util :only [parse-http-date http-date] :as du])
             [liberator.util :as du]
             )
@@ -157,57 +157,46 @@
        ;;[download-date c-date]
     ;(analyze! download-date save-dir-unfixed)))
 
+(defn mt []
+  (stats/median [1 2 3 4]))
 
-(defn plain-exchange-rates-for-file-raw [currency-pairs file-to-analyze]
-  "(plain-exchange-rates-for-file [[:EUR :BTC]] \"/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml\")"
+(defn plain-x-rates-for-file-raw [currency-pairs file-to-analyze]
+  "(plain-x-rates-for-file [[:EUR :BTC]] \"/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml\")"
   "[\"0.01219512\" \"0.12100001\"]"
   (into []
         (for [currency-pair currency-pairs]
           (let [zipped-xml-file (get-zipped file-to-analyze)]
             (get-vals zipped-xml-file currency-pair :highest-bid)))))
 
-(defn plain-exchange-rates-for-file [currency-pairs file-to-analyze]
+(defn plain-x-rates-for-file [currency-pairs file-to-analyze]
   (into []
-        (map #(bigdec %) (plain-exchange-rates-for-file-raw currency-pairs file-to-analyze))))
+        (map #(bigdec %) (plain-x-rates-for-file-raw currency-pairs file-to-analyze))))
 
-(defn exchange-rates-for-file [currency-pairs file-to-analyze]
-  "(exchange-rates-for-file [[:EUR :BTC]] \"/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml\")"
+(defn x-rates-for-file [currency-pairs file-to-analyze]
+  "(x-rates-for-file [[:EUR :BTC]] \"/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml\")"
   "{:[:EUR :BTC] \"0.01219512\" :[:PPC :USD] \"0.12100001\"}"
   (reduce into {}
-  (let [plain-ex-rates (plain-exchange-rates-for-file currency-pairs file-to-analyze)]
+  (let [plain-ex-rates (plain-x-rates-for-file currency-pairs file-to-analyze)]
     (map #(hash-map (keyword (str %1)) %2) currency-pairs plain-ex-rates))))
 
-(defn e [currency-pairs files-to-analyze]
-  "(e [[:EUR :BTC] [:PPC :USD]]"
-  "                 [\"/home/bost/vircurex-flat/vircurex.2013-05-17_03-05-04.xml\""
-  "                  \"/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml\"])"
+(defn time-value-pairs [currency-pair-vec files-to-analyze]
+  "currency-pair-vec: one currency-pair wrapped in a vector container"
+  "(time-value-pairs [[:EUR :BTC]]"
+  "                  [\"/home/bost/vircurex-flat/vircurex.2013-05-17_03-05-04.xml\""
+  "                   \"/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml\"])"
   "Example:"
-  "([:tstamp \"2013-05-17_03-05-04\" :[:EUR :BTC] \"0.010\"] [:[:PPC :USD] \"0.181\"]"
-  " [:tstamp \"2013-05-17_03-05-04\" :[:EUR :BTC] \"0.012\"] [:[:PPC :USD] \"0.121\"]"
-  " ...)"
+  "({:time 20130517030504 :value 0.01054073M} {:time 20130414115026 :value 0.01219512M})"
   (for [file-to-analyze files-to-analyze]
-    (let [ex-rates (plain-exchange-rates-for-file currency-pairs file-to-analyze)
-          tstamp-ex-rates (map #(hash-map :value %2) currency-pairs ex-rates)
+    (let [ex-rates (plain-x-rates-for-file currency-pair-vec file-to-analyze)
+          tstamp-ex-rates (map #(hash-map :value %2) currency-pair-vec ex-rates)
           ]
       (into { :time
              (fname-tstamp (basename file-to-analyze)) }
-            tstamp-ex-rates)))
-
-  ;; [{:time 1297110662 :value 88},
-  ;;  {:time 1297110663 :value 33},
-  ;;  {:time 1297110663 :value 51},
-  ;;  {:time 1297110664 :value 53},
-  ;;  {:time 1297110665 :value 58},
-  ;;  {:time 1297110666 :value 59},]
-
-   ;; (into [] (c/e [[:EUR :BTC] [:PPC :USD]]
-   ;;               ["/home/bost/vircurex-flat/vircurex.2013-05-17_03-05-04.xml"
-   ;;                "/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml"]))
-)
+            tstamp-ex-rates))))
 
 
-(defn exchange-rates [currency-pairs files-to-analyze]
-  "(exchange-rates [[:EUR :BTC] [:PPC :USD]]"
+(defn x-rates [currency-pairs files-to-analyze]
+  "(x-rates [[:EUR :BTC] [:PPC :USD]]"
   "                 [\"/home/bost/vircurex-flat/vircurex.2013-05-17_03-05-04.xml\""
   "                  \"/home/bost/vircurex-flat/vircurex.2013-04-14_11-50-26.xml\"])"
   "Example:"
@@ -215,20 +204,20 @@
   " [:tstamp \"2013-05-17_03-05-04\" :[:EUR :BTC] \"0.012\"] [:[:PPC :USD] \"0.121\"]"
   " ...)"
   (for [file-to-analyze files-to-analyze]
-    (let [ex-rates (exchange-rates-for-file currency-pairs file-to-analyze)]
+    (let [ex-rates (x-rates-for-file currency-pairs file-to-analyze)]
       (into { (keyword "tstamp")
                    (fname-tstamp (basename file-to-analyze)) }
                    ex-rates))))
 
-(defn all-exchange-rates [save-dir download-date]
+(defn all-x-rates [save-dir download-date]
   "All exchange rates for all curreny pairs up to download-date (TODO <= or just < as download-date?)"
-  "Example: see exchange-rates"
+  "Example: see x-rates"
   (let [files-to-analyze (a/all-fpaths-between a/c-flat-fs
                                                c-save-dir
                                                (a/past-date download-date)
                                                ;; c-past-date
                                                download-date)]
-    (exchange-rates (currency-pairs save-dir
+    (x-rates (currency-pairs save-dir
                                     download-date
                                     files-to-analyze)
                     files-to-analyze)))
@@ -238,7 +227,7 @@
   (
    ;; count
    pp/print-table
-   (all-exchange-rates (d/fix-dir-name save-dir-unfixed)
+   (all-x-rates (d/fix-dir-name save-dir-unfixed)
                                    download-date)))
 
 (defn -main []

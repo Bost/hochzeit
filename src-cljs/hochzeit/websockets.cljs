@@ -1,5 +1,7 @@
 (ns hochzeit.websockets
-  (:require [hochzeit.bar :as bar]))
+  (:require [hochzeit.bar :as bar]
+            ;;[incanter.stats :as stats]
+            ))
 
 (defn log [& args]
   "TODO it might be better to turn fn log to a macro"
@@ -29,6 +31,19 @@
   "See http://stackoverflow.com/questions/122102/most-efficient-way-to-clone-an-object"
   (.parse js/JSON (.stringify js/JSON obj)))
 
+
+(defn data-vals [data]
+  (into [] (for [e data]
+             (.-value e))))
+
+(defn scale-factor [data]
+  "Compute scale factor out of data"
+  (let [v (data-vals data)]
+    (.log js/console (apply min v))
+    (.log js/console (apply max v))
+    ;; (.log js/console (stats/median v))
+  300))
+
 (defn scale! [data factor]
   (doall  ; doall must be executed here
    (for [elem data]
@@ -37,7 +52,8 @@
 (defn on-message [e]
   (let [obj (.parse js/JSON (.-data e))
         obj-copy (copy obj)]
-    (scale! obj-copy 300)
+    (.log js/console "obj: " obj)
+    (scale! obj-copy (scale-factor obj))
     (bar/bar-chart js/d3 obj-copy)))
   
 (set! (.-onmessage ws) on-message)
